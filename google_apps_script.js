@@ -6,55 +6,67 @@
  * FOLDER PENYIMPANAN: "Rundown Meetup"
  * Fitur:
  * 1. Simpan Foto (doPost): Menyimpan foto ke folder "Rundown Meetup" di Google Drive
- * 2. Ambil Foto (doGet): Mengambil semua foto dari folder "Rundown Meetup"
- *    sehingga foto otomatis muncul di semua perangkat (smartphone, laptop, dll).
+ * 2. Simpan Photostrip (doPost): Sinkronisasi data Photostrip kolaboratif multi-perangkat
+ * 3. Ambil Semua Data (doGet): Mengambil seluruh foto dan photostrip sehingga
+ *    otomatis terbaca di semua perangkat (smartphone, laptop, iPhone, dll).
  * 
- * PANDUAN DEPLOY / UPDATE (1 MENIT):
+ * PANDUAN PENTING AGAR TIDAK ERROR 403 FORBIDDEN / FOTO TERBACA DI DEVICE LAIN:
  * 1. Buka https://script.google.com/
- * 2. Buat proyek baru atau buka proyek yang sudah ada
- * 3. Hapus semua kode, ganti dengan seluruh isi file ini
- * 4. Klik "Deploy" (kanan atas) -> "New deployment"
- * 5. Pilih "Web app" (ikon gerigi)
- * 6. Setting:
- *    - Description: "Rundown Meetup Cloud Storage v2"
+ * 2. Buka proyek Anda, tempel seluruh kode file ini, lalu Simpan (Ctrl + S).
+ * 3. Klik tombol biru "Deploy" di kanan atas -> Pilih "New deployment"
+ * 4. Klik ikon gerigi di samping "Select type", pilih "Web app"
+ * 5. KONFIGURASI WAJIB:
+ *    - Description: "Rundown Meetup & Photostrip Sync"
  *    - Execute as: "Me" (Email akun Google Anda)
- *    - Who has access: "Anyone" (Siapa saja, agar semua teman bisa melihat & upload)
- * 7. Klik "Deploy", beri izin akses jika diminta (Authorize Access)
- * 8. Salin "Web app URL" (berakhiran /exec)
- * 9. Tempelkan URL tersebut ke web Rundown Meetup di menu Pengaturan Drive!
+ *    - Who has access: "Anyone" (WAJIB pilih "Anyone" / Siapa saja!)
+ *      *PERHATIAN: Jika memilih "Only myself", perangkat lain atau HP teman
+ *      akan ditolak oleh Google dengan error 403 Forbidden, sehingga foto tidak akan muncul!
+ * 6. Klik "Deploy", lalu klik "Authorize access" dan pilih akun Google Anda.
+ * 7. Salin Web app URL (berakhiran /exec).
  * =========================================================================
  */
 
 // Nama Folder Utama di Google Drive
 var DEFAULT_FOLDER_NAME = "Rundown Meetup";
+var PHOTOSTRIP_FILE_NAME = "photostrips_data.json";
 
 /**
- * Endpoint POST: Menerima unggahan foto dari web dan menyimpannya ke Google Drive
+ * Endpoint POST: Menerima unggahan foto atau sinkronisasi photostrip
  */
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
-    
+    var parentFolder = getOrCreateFolder(DEFAULT_FOLDER_NAME);
+
+    // =======================================================================
+    // TIPE 1: SINKRONISASI PHOTOSTRIP KOLABORATIF
+    // =======================================================================
+    if (data.type === "photostrip_sync" || data.type === "photostrip") {
+      var savedStrips = savePhotostripsData(parentFolder, data.strips || [data.strip]);
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "Data photostrip berhasil disinkronkan ke Google Drive!",
+        photostrips: savedStrips
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // =======================================================================
+    // TIPE 2: UNGGAHAN FOTO (KAMERA RUNDOWN / SLOT FOTO)
+    // =======================================================================
     var base64Data = data.base64Data;
+    if (!base64Data) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "error",
+        message: "Data gambar tidak ditemukan dalam request."
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     var filename = data.filename || ("meetup_" + new Date().getTime() + ".jpg");
     var mimeType = data.mimeType || "image/jpeg";
     var spotId = data.spotId || "spot-1";
     var spotName = data.spotName || "General";
     var userName = data.userName || "Teman Main";
     var timestamp = data.timestamp || new Date().toISOString();
-    var folderId = data.folderId;
-
-    // Ambil atau buat folder utama "Rundown Meetup"
-    var parentFolder;
-    if (folderId && folderId.trim() !== "") {
-      try {
-        parentFolder = DriveApp.getFolderById(folderId.trim());
-      } catch (err) {
-        parentFolder = getOrCreateFolder(DEFAULT_FOLDER_NAME);
-      }
-    } else {
-      parentFolder = getOrCreateFolder(DEFAULT_FOLDER_NAME);
-    }
 
     // Buat subfolder berdasarkan lokasi agar rapi di Drive
     var spotFolder = getOrCreateSubFolder(parentFolder, spotName);
@@ -67,7 +79,7 @@ function doPost(e) {
     // Buat file di Google Drive
     var file = spotFolder.createFile(blob);
     
-    // Buka akses publik untuk link file
+    // Buka akses publik untuk link file agar bisa dibaca dari mana saja
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     
     // Simpan metadata terstruktur di deskripsi file agar bisa dibaca kembali oleh doGet
@@ -109,8 +121,8 @@ function doPost(e) {
 }
 
 /**
- * Endpoint GET: Mengambil daftar seluruh foto dari folder "Rundown Meetup"
- * Ini memungkinkan semua perangkat (HP teman lain / laptop) melihat foto yang sama secara realtime!
+ * Endpoint GET: Mengambil daftar seluruh foto & photostrip dari folder "Rundown Meetup"
+ * Ini memungkinkan semua perangkat (HP teman lain / laptop) membaca data yang sama!
  */
 function doGet(e) {
   try {
@@ -132,11 +144,16 @@ function doGet(e) {
       return new Date(b.timestamp) - new Date(a.timestamp);
     });
 
+    // 3. Ambil data photostrip kolaboratif
+    var photostrips = getPhotostripsData(rootFolder);
+
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
       folderName: DEFAULT_FOLDER_NAME,
       total: photos.length,
-      photos: photos
+      photos: photos,
+      photostrips: photostrips,
+      serverTime: new Date().toISOString()
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
@@ -148,14 +165,55 @@ function doGet(e) {
 }
 
 /**
+ * Pembantu: Baca file photostrips_data.json dari folder Drive
+ */
+function getPhotostripsData(folder) {
+  try {
+    var files = folder.getFilesByName(PHOTOSTRIP_FILE_NAME);
+    if (files.hasNext()) {
+      var file = files.next();
+      var content = file.getBlob().getDataAsString();
+      if (content && content.trim() !== "") {
+        return JSON.parse(content);
+      }
+    }
+  } catch (e) {
+    Logger.log("Error reading photostrips data: " + e.toString());
+  }
+  return [];
+}
+
+/**
+ * Pembantu: Simpan atau update file photostrips_data.json di folder Drive
+ */
+function savePhotostripsData(folder, stripsList) {
+  if (!Array.isArray(stripsList)) stripsList = [];
+  var files = folder.getFilesByName(PHOTOSTRIP_FILE_NAME);
+  var jsonContent = JSON.stringify(stripsList);
+
+  if (files.hasNext()) {
+    var file = files.next();
+    file.setContent(jsonContent);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } else {
+    var newFile = folder.createFile(PHOTOSTRIP_FILE_NAME, jsonContent, MimeType.PLAIN_TEXT);
+    newFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  }
+  return stripsList;
+}
+
+/**
  * Pembantu: Ekstrak foto dan metadata dari sebuah folder Drive
  */
 function collectPhotosFromFolder(folder, list, defaultSpotName, defaultSpotId) {
   var files = folder.getFiles();
   while (files.hasNext()) {
     var file = files.next();
-    var mime = file.getMimeType();
     
+    // Lewati file metadata JSON
+    if (file.getName() === PHOTOSTRIP_FILE_NAME) continue;
+
+    var mime = file.getMimeType();
     // Hanya ambil file gambar
     if (mime.indexOf("image/") !== 0 && mime !== "application/octet-stream") continue;
 
@@ -182,7 +240,6 @@ function collectPhotosFromFolder(folder, list, defaultSpotName, defaultSpotId) {
         if (parsed.savingsPercent) meta.savingsPercent = parsed.savingsPercent;
       } catch (e) {}
     } else if (desc) {
-      // Fallback format text lama
       var userMatch = desc.match(/Diunggah oleh:\s*([^|]+)/);
       if (userMatch) meta.userName = userMatch[1].trim();
       var spotMatch = desc.match(/Lokasi:\s*([^|]+)/);

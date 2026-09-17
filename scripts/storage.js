@@ -147,6 +147,14 @@ const AppStorage = {
    * 2. Any photo deleted from Google Drive is automatically deleted from local storage immediately.
    * 3. Prevents browser or proxy caching by using dynamic cache-buster timestamps.
    */
+  /**
+   * Sync and fetch all photos stored in the "Rundown Meetup" Google Drive folder
+   * Two-way reconciliation:
+   * 1. Google Drive is the authoritative source of truth.
+   * 2. Any photo deleted from Google Drive by user is automatically purged from local storage.
+   * 3. Unsynced local photos are PRESERVED and automatically retried for upload.
+   * 4. Prevents browser or proxy caching by using dynamic cache-buster timestamps.
+   */
   async syncFromDrive(forceClean = false) {
     if (!this.db) await this.init();
     const settings = this.getSettings();
@@ -155,15 +163,24 @@ const AppStorage = {
     }
 
     try {
-      // Use cache-busting timestamp param to ensure neither browser nor CDN/proxy serves cached data
       const cacheBuster = (settings.scriptUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
       const response = await fetch(settings.scriptUrl + cacheBuster, {
         method: 'GET',
         cache: 'no-store'
       });
 
+      if (response.status === 403) {
+        console.warn('Google Drive returned 403 Forbidden. "Who has access" must be set to "Anyone" in Google Apps Script.');
+        return {
+          success: false,
+          is403: true,
+          updated: false,
+          message: 'Akses Google Drive ditolak (403 Forbidden). Pastikan opsi "Who has access" di Google Apps Script sudah diatur ke "Anyone" (Siapa saja).'
+        };
+      }
+
       if (!response.ok) {
-        return { success: false, updated: false, message: 'Gagal menghubungi server Google Drive' };
+        return { success: false, updated: false, message: 'Gagal menghubungi server Google Drive (' + response.status + ')' };
       }
 
       const resJson = await response.json();
@@ -180,39 +197,20 @@ const AppStorage = {
 
       const currentLocalPhotos = await this.getAllPhotos();
       let stateChanged = false;
+      let hasPendingUploads = false;
 
-      // 1. PURGE DELETED PHOTOS:
-      // If user deleted photos in Google Drive, remove them from local storage immediately
-      if (drivePhotos.length === 0) {
-        // If Google Drive folder is empty, purge all local synced/old photos
-        for (const localPhoto of currentLocalPhotos) {
-          if (localPhoto.syncStatus !== 'syncing') {
+      // 1. RECONCILIATION & PURGE DELETED PHOTOS:
+      for (const localPhoto of currentLocalPhotos) {
+        // If photo was synced previously but is now missing from Drive, user deleted it from Drive: purge it
+        if (localPhoto.syncStatus === 'synced') {
+          const existsInDrive = localPhoto.driveFileId ? driveFileIds.has(String(localPhoto.driveFileId)) : false;
+          if (!existsInDrive) {
             await this.deletePhoto(localPhoto.id);
             stateChanged = true;
           }
-        }
-      } else {
-        for (const localPhoto of currentLocalPhotos) {
-          const hasDriveRecord = localPhoto.driveFileId ? driveFileIds.has(String(localPhoto.driveFileId)) : false;
-          
-          if (localPhoto.driveFileId && !hasDriveRecord) {
-            // Photo was uploaded to Drive earlier, but user deleted it from Drive: purge it!
-            await this.deletePhoto(localPhoto.id);
-            stateChanged = true;
-          } else if (localPhoto.syncStatus === 'synced' && (!localPhoto.driveFileId || !hasDriveRecord)) {
-            await this.deletePhoto(localPhoto.id);
-            stateChanged = true;
-          } else if (localPhoto.syncStatus === 'local' || localPhoto.syncStatus === 'error') {
-            // Check if this local photo is missing from Drive
-            const existsInDrive = drivePhotos.some(dp => 
-              (dp.timestamp && dp.timestamp === localPhoto.timestamp && dp.userName === localPhoto.userName)
-            );
-            if (!existsInDrive) {
-              // Delete stale orphaned photo from local store
-              await this.deletePhoto(localPhoto.id);
-              stateChanged = true;
-            }
-          }
+        } else if (localPhoto.syncStatus === 'local' || localPhoto.syncStatus === 'error') {
+          // Photo was taken on this device but failed/pending upload: PRESERVE IT and retry upload!
+          hasPendingUploads = true;
         }
       }
 
@@ -261,6 +259,16 @@ const AppStorage = {
         }
       }
 
+      // 3. RETRY PENDING UPLOADS (if any photo was taken offline or during error)
+      if (hasPendingUploads) {
+        this.retryPendingUploads();
+      }
+
+      // 4. SYNC PHOTOSTRIPS TO LOCAL IF INCLUDED IN RESPONSE
+      if (resJson.photostrips && Array.isArray(resJson.photostrips) && window.PhotostripStorage && typeof window.PhotostripStorage.mergeCloudStrips === 'function') {
+        window.PhotostripStorage.mergeCloudStrips(resJson.photostrips);
+      }
+
       return { success: true, updated: stateChanged, totalInDrive: drivePhotos.length };
     } catch (err) {
       console.warn('syncFromDrive error:', err);
@@ -276,6 +284,22 @@ const AppStorage = {
   },
 
   /**
+   * Retry all pending / failed photos that haven't reached Google Drive yet
+   */
+  async retryPendingUploads() {
+    if (!this.db) await this.init();
+    try {
+      const all = await this.getAllPhotos();
+      const pending = all.filter(p => p.syncStatus === 'local' || p.syncStatus === 'error');
+      for (const p of pending) {
+        await this.syncToDrive(p);
+      }
+    } catch (e) {
+      console.warn('retryPendingUploads error:', e);
+    }
+  },
+
+  /**
    * Send photo to Google Apps Script Web App for Google Drive upload into "Rundown Meetup"
    */
   async syncToDrive(photo) {
@@ -284,7 +308,6 @@ const AppStorage = {
       return { success: false, message: 'Google Drive Web App URL belum diatur di Pengaturan.' };
     }
 
-    // Update status to syncing
     photo.syncStatus = 'syncing';
     await this.updatePhoto(photo);
     if (window.dispatchEvent) {
@@ -307,7 +330,6 @@ const AppStorage = {
         folderId: settings.folderId || ''
       };
 
-      // Send to Apps Script Web App
       const response = await fetch(settings.scriptUrl, {
         method: 'POST',
         headers: {
@@ -316,12 +338,22 @@ const AppStorage = {
         body: JSON.stringify(payload)
       });
 
+      if (response.status === 403) {
+        photo.syncStatus = 'error';
+        photo.driveError = 'Google Apps Script 403 Forbidden. Pastikan "Who has access" diatur ke "Anyone" di script.google.com';
+        await this.updatePhoto(photo);
+        if (window.dispatchEvent) {
+          window.dispatchEvent(new CustomEvent('photoSyncUpdate', { detail: photo }));
+        }
+        return photo;
+      }
+
       const resText = await response.text();
       let resJson;
       try {
         resJson = JSON.parse(resText);
       } catch (e) {
-        resJson = { status: 'success', message: 'Terkirim ke Apps Script' };
+        resJson = { status: response.ok ? 'success' : 'error', message: 'Terkirim ke Apps Script' };
       }
 
       if (resJson.status === 'success' || response.ok) {
@@ -370,3 +402,23 @@ const AppStorage = {
     return this.getSettings();
   }
 };
+
+// Auto-sync event listeners across devices and reconnects
+window.addEventListener('online', () => {
+  AppStorage.retryPendingUploads();
+  AppStorage.syncFromDrive();
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    AppStorage.syncFromDrive();
+  }
+});
+
+// Periodic background sync every 30 seconds
+setInterval(() => {
+  if (navigator.onLine && document.visibilityState === 'visible') {
+    AppStorage.syncFromDrive();
+  }
+}, 30000);
+

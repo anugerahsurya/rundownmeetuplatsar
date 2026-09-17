@@ -152,6 +152,153 @@ const PhotostripStorage = {
       return [defaultStrip];
     }
     return strips;
+  },
+
+  getScriptUrl() {
+    if (window.AppStorage && typeof window.AppStorage.getSettings === 'function') {
+      return window.AppStorage.getSettings().scriptUrl;
+    }
+    return localStorage.getItem('gdrive_script_url') || 'https://script.google.com/macros/s/AKfycbwJH59GfDV4w7JqvR1I3DpXizDAWgNzF9VK2p97o4ltHKVJn1dsWAxot4T2nZTX5CT7Mg/exec';
+  },
+
+  /**
+   * Merge photostrips from cloud with local storage
+   */
+  async mergeCloudStrips(cloudStrips) {
+    if (!this.db) await this.init();
+    if (!Array.isArray(cloudStrips) || cloudStrips.length === 0) {
+      return await this.getAllStrips();
+    }
+
+    const localStrips = await this.getAllStrips();
+    const localMap = new Map(localStrips.map(s => [s.id, s]));
+    let stateChanged = false;
+    let needsCloudPush = false;
+
+    for (const cloudStrip of cloudStrips) {
+      if (!cloudStrip || !cloudStrip.id) continue;
+      const localStrip = localMap.get(cloudStrip.id);
+
+      if (!localStrip) {
+        await this.saveStrip(cloudStrip);
+        localMap.set(cloudStrip.id, cloudStrip);
+        stateChanged = true;
+      } else {
+        let stripModified = false;
+        const mergedSlots = [...(localStrip.slots || [])];
+
+        for (let i = 0; i < 4; i++) {
+          const lSlot = mergedSlots[i] || { slotIndex: i, photoUrl: null, userName: null, timestamp: null };
+          const cSlot = (cloudStrip.slots && cloudStrip.slots[i]) || { slotIndex: i, photoUrl: null, userName: null, timestamp: null };
+
+          if (cSlot.photoUrl && !lSlot.photoUrl) {
+            mergedSlots[i] = cSlot;
+            stripModified = true;
+          } else if (lSlot.photoUrl && !cSlot.photoUrl) {
+            needsCloudPush = true;
+          } else if (cSlot.photoUrl && lSlot.photoUrl) {
+            const cTime = new Date(cSlot.timestamp || 0).getTime();
+            const lTime = new Date(lSlot.timestamp || 0).getTime();
+            if (cTime > lTime) {
+              mergedSlots[i] = cSlot;
+              stripModified = true;
+            }
+          }
+        }
+
+        if (stripModified) {
+          localStrip.slots = mergedSlots;
+          localStrip.isComplete = mergedSlots.every(s => s.photoUrl !== null);
+          if (cloudStrip.templateId) localStrip.templateId = cloudStrip.templateId;
+          if (cloudStrip.title) localStrip.title = cloudStrip.title;
+          await this.saveStrip(localStrip);
+          stateChanged = true;
+        }
+      }
+    }
+
+    const cloudIds = new Set(cloudStrips.map(s => s.id));
+    for (const localStrip of localStrips) {
+      if (!cloudIds.has(localStrip.id)) {
+        needsCloudPush = true;
+      }
+    }
+
+    if (needsCloudPush) {
+      this.syncToCloud();
+    }
+
+    return await this.getAllStrips();
+  },
+
+  /**
+   * Fetch and sync photostrips from Google Apps Script / Drive
+   */
+  async syncFromCloud() {
+    const url = this.getScriptUrl();
+    if (!url || url.trim() === '') {
+      return { success: false, message: 'URL Google Apps Script belum diatur.' };
+    }
+
+    try {
+      const cacheBuster = (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+      const res = await fetch(url + cacheBuster, { method: 'GET', cache: 'no-store' });
+
+      if (res.status === 403) {
+        return {
+          success: false,
+          is403: true,
+          message: 'Google Apps Script 403 Forbidden. Pastikan "Who has access" diatur ke "Anyone" di script.google.com.'
+        };
+      }
+
+      if (!res.ok) {
+        return { success: false, message: `Server mengembalikan kode status ${res.status}` };
+      }
+
+      const json = await res.json();
+      if (json.status === 'success' && Array.isArray(json.photostrips)) {
+        const merged = await this.mergeCloudStrips(json.photostrips);
+        return { success: true, strips: merged, total: json.photostrips.length };
+      }
+
+      return { success: false, message: 'Format data awan tidak sesuai' };
+    } catch (err) {
+      console.warn('syncFromCloud error:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Upload all photostrips to Google Apps Script / Drive
+   */
+  async syncToCloud() {
+    const url = this.getScriptUrl();
+    if (!url || url.trim() === '') return { success: false };
+
+    try {
+      const allStrips = await this.getAllStrips();
+      const payload = {
+        type: 'photostrip_sync',
+        strips: allStrips
+      };
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.status === 403) {
+        console.warn('syncToCloud 403 Forbidden: Pastikan "Who has access" diatur ke "Anyone"');
+        return { success: false, is403: true };
+      }
+
+      return { success: true };
+    } catch (err) {
+      console.warn('syncToCloud error:', err);
+      return { success: false, error: err.message };
+    }
   }
 };
 
@@ -172,10 +319,19 @@ const PhotostripApp = {
 
   async init() {
     await PhotostripStorage.init();
+    // Tarik data photostrip dari cloud saat awal buka agar multi-device langsung sinkron
+    const syncRes = await PhotostripStorage.syncFromCloud();
     this.strips = await PhotostripStorage.createDefaultIfEmpty();
     this.renderTemplateSelector();
     this.bindEvents();
     this.render();
+
+    // Setup auto-sync latar belakang
+    this.setupAutoSync();
+
+    if (syncRes && syncRes.is403) {
+      console.warn('Photostrip sync notice:', syncRes.message);
+    }
   },
 
   bindEvents() {
@@ -269,12 +425,15 @@ const PhotostripApp = {
     };
 
     await PhotostripStorage.saveStrip(newStrip);
+    // Push new strip to cloud immediately
+    PhotostripStorage.syncToCloud();
+
     this.strips.unshift(newStrip);
     this.closeCreateModal();
     this.render();
 
     if (typeof showToast === 'function') {
-      showToast('Photostrip baru berhasil dibuat! Klik slot untuk mengambil foto 📸', 'success');
+      showToast('Photostrip baru berhasil dibuat & disinkronkan ke Cloud! 📸', 'success');
     }
   },
 
@@ -568,6 +727,8 @@ const PhotostripApp = {
       strip.isComplete = strip.slots.every(s => s.photoUrl !== null);
 
       await PhotostripStorage.saveStrip(strip);
+      // Synchronize strip to cloud so all devices immediately see the new slot photo
+      PhotostripStorage.syncToCloud();
 
       // Also backup photo to Google Drive under Rundown Meetup folder if connected
       if (window.AppStorage && typeof window.AppStorage.savePhoto === 'function') {
@@ -744,6 +905,62 @@ const PhotostripApp = {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  },
+
+  /**
+   * Manual Refresh from Google Drive Cloud
+   */
+  async refreshFromCloud() {
+    if (typeof showToast === 'function') {
+      showToast('Menghubungkan ke Google Drive Cloud... 🔄', 'info');
+    }
+    const res = await PhotostripStorage.syncFromCloud();
+    this.strips = await PhotostripStorage.getAllStrips();
+    this.render();
+
+    if (typeof showToast === 'function') {
+      if (res.success) {
+        showToast(`Photostrip berhasil disinkronkan (${this.strips.length} strip) ☁️`, 'success');
+      } else if (res.is403) {
+        showToast('Akses Google Drive ditolak (403). Di script.google.com, pastikan "Who has access" diatur ke "Anyone" ⚠️', 'warning');
+      } else {
+        showToast(res.message || 'Tidak dapat terhubung ke Google Drive', 'warning');
+      }
+    }
+  },
+
+  /**
+   * Auto Sync setup across device tabs and reconnection
+   */
+  setupAutoSync() {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        this.silentCloudSync();
+      }
+    });
+
+    window.addEventListener('online', () => {
+      this.silentCloudSync();
+    });
+
+    // Periodic poll every 25 seconds
+    setInterval(() => {
+      if (navigator.onLine && document.visibilityState === 'visible') {
+        this.silentCloudSync();
+      }
+    }, 25000);
+  },
+
+  async silentCloudSync() {
+    try {
+      const res = await PhotostripStorage.syncFromCloud();
+      if (res && res.success) {
+        this.strips = await PhotostripStorage.getAllStrips();
+        this.render();
+      }
+    } catch (e) {
+      console.warn('Silent sync error:', e);
+    }
   }
 };
 

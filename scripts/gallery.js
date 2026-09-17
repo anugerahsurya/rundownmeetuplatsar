@@ -90,6 +90,9 @@ const PhotoGallery = {
           window.SpherePreviewApp.refreshPhotos();
         }
       }
+      if (res && res.is403 && typeof showToast === 'function') {
+        console.warn('Google Drive sync 403:', res.message);
+      }
     } catch (e) {
       console.warn('Sync from drive notice:', e);
     }
@@ -100,7 +103,7 @@ const PhotoGallery = {
       showToast('Menghubungkan langsung ke Google Drive... 🔄', 'info');
     }
     try {
-      const res = await AppStorage.purgeLocalCacheAndSync();
+      const res = await AppStorage.syncFromDrive(false);
       this.photos = await AppStorage.getAllPhotos();
       this.populateUserFilterOptions();
       this.render();
@@ -110,6 +113,8 @@ const PhotoGallery = {
       if (typeof showToast === 'function') {
         if (res.success) {
           showToast(`Galeri diperbarui dari Google Drive (${this.photos.length} foto) ✅`, 'success');
+        } else if (res.is403) {
+          showToast('Akses Google Drive ditolak (403). Di script.google.com, pastikan "Who has access" diatur ke "Anyone" ⚠️', 'warning');
         } else {
           showToast(res.message || 'Tidak dapat terhubung ke Google Drive', 'warning');
         }

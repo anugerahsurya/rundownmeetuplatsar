@@ -62,9 +62,14 @@
         <button class="strip-filter-btn" data-filter="complete">Selesai (4/4)</button>
       </div>
 
-      <button class="btn btn-outline btn-sm" onclick="PhotostripApp.openCreateModal()">
-        <i class="ph ph-plus"></i> Buat Photostrip Baru
-      </button>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button class="btn btn-outline btn-sm" onclick="PhotostripApp.refreshFromCloud()" title="Sinkronkan data dengan Google Drive Cloud">
+          <i class="ph ph-arrows-clockwise"></i> Segarkan dari Cloud
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="PhotostripApp.openCreateModal()">
+          <i class="ph ph-plus"></i> Buat Photostrip Baru
+        </button>
+      </div>
     </div>
 
     <!-- Photostrips Grid -->
