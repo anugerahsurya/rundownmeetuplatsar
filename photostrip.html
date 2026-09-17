@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Photostrip Kolaborasi • Rundown Meetup Latsar 2026</title>
+  <meta name="description" content="Buat photostrip kolaboratif 4-slot bersama teman tanpa harus bertemu langsung. Dilengkapi 5 template estetik dan ekspor gambar HD.">
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/photostrip.css">
+</head>
+<body class="photostrip-body">
+
+  <!-- Header -->
+  <header class="photostrip-header">
+    <div class="container photostrip-nav">
+      <a href="index.html" class="back-link">
+        <i class="ph ph-arrow-left"></i>
+        <span>Kembali ke Rundown</span>
+      </a>
+
+      <div class="photostrip-brand">
+        <i class="ph ph-film-strip"></i>
+        <span>Photostrip</span>
+      </div>
+
+      <button id="btn-open-create-strip" class="btn btn-primary btn-sm">
+        <i class="ph ph-plus-circle"></i>
+        <span class="hide-on-mobile">Buat Strip Baru</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Hero Header -->
+    <section class="photostrip-hero">
+      <span class="photostrip-hero-badge">
+        <i class="ph ph-users-three"></i> Kolaborasi Jarak Jauh
+      </span>
+      <h1 class="photostrip-hero-title">Photostrip 4-Slot</h1>
+      <p class="photostrip-hero-desc">
+        Bikin kenangan foto strip estetik bareng teman tanpa harus bertemu di satu tempat. Pilih template favorit, klik slot kosong untuk mengambil foto secara live, dan unduh photostrip lengkapnya beresolusi tinggi!
+      </p>
+    </section>
+
+    <!-- Filter & Action Bar -->
+    <div class="photostrip-action-bar">
+      <div class="strip-status-filter">
+        <button class="strip-filter-btn active" data-filter="all">Semua Strip</button>
+        <button class="strip-filter-btn" data-filter="incomplete">Sedang Berjalan</button>
+        <button class="strip-filter-btn" data-filter="complete">Selesai (4/4)</button>
+      </div>
+
+      <button class="btn btn-outline btn-sm" onclick="PhotostripApp.openCreateModal()">
+        <i class="ph ph-plus"></i> Buat Photostrip Baru
+      </button>
+    </div>
+
+    <!-- Photostrips Grid -->
+    <div class="photostrips-grid" id="photostrips-grid">
+      <!-- Populated dynamically by scripts/photostrip.js -->
+    </div>
+  </main>
+
+  <!-- =========================================================
+       MODALS
+       ========================================================= -->
+
+  <!-- Modal 1: Create New Photostrip Modal -->
+  <div class="modal-overlay" id="create-strip-modal">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="ph ph-film-strip"></i> Buat Photostrip Baru
+        </h3>
+        <button class="modal-close-btn" onclick="PhotostripApp.closeCreateModal()">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="form-create-strip">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="input-strip-creator">Nama Kamu (Pembuat)</label>
+            <select id="input-strip-creator" class="form-control">
+              <option value="Surya">Surya</option>
+              <option value="Zakki">Zakki</option>
+              <option value="Lia">Lia</option>
+              <option value="Sofi">Sofi</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="input-strip-title">Judul / Momen Photostrip</label>
+            <input type="text" id="input-strip-title" class="form-control" placeholder="Contoh: Meetup Latsar 2026 / Sesi Kopi Sore" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 8px;">
+            <label class="form-label">Pilih Template Desain (5 Pilihan)</label>
+            <div class="template-selector-grid" id="template-selector-container">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="PhotostripApp.closeCreateModal()">Batal</button>
+            <button type="submit" class="btn btn-primary">Mulai Kolaborasi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Live Camera Capture for Slot -->
+  <div class="modal-overlay" id="strip-camera-modal">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="ph ph-camera"></i> Ambil Foto untuk Slot
+        </h3>
+        <button class="modal-close-btn" onclick="PhotostripApp.closeCameraModal()">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 4px;">
+          <span id="strip-camera-slot-badge" class="section-badge" style="margin-bottom: 0;">Mengisi Slot #1 dari 4</span>
+        </div>
+
+        <!-- Live View Screen -->
+        <div id="strip-camera-live-view">
+          <div class="camera-stream-container">
+            <video id="strip-video-feed" playsinline autoplay muted></video>
+          </div>
+
+          <!-- Camera Controls -->
+          <div class="camera-controls-bar">
+            <!-- Mirror Toggle -->
+            <button type="button" class="camera-action-btn active" id="strip-btn-mirror" title="Mirror Mode Selfie">
+              <i class="ph ph-flip-horizontal"></i>
+            </button>
+
+            <!-- Big Shutter Button -->
+            <button type="button" class="shutter-btn" id="strip-btn-capture" title="Ambil Foto">
+              <span class="shutter-inner"></span>
+            </button>
+
+            <!-- Switch Camera -->
+            <button type="button" class="camera-action-btn" id="strip-btn-flip" title="Ganti Kamera Depan/Belakang">
+              <i class="ph ph-arrows-clockwise"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Review Screen (After Capture) -->
+        <div id="strip-camera-review-view" style="display: none;">
+          <div class="camera-preview-img-box">
+            <img id="strip-camera-preview-img" alt="Pratinjau Hasil Foto Slot">
+          </div>
+
+          <div style="margin-top: 14px;">
+            <div class="form-group">
+              <label class="form-label" for="strip-user-name-input">Nama Pengisi Slot Ini</label>
+              <select id="strip-user-name-input" class="form-control">
+                <option value="Surya">Surya</option>
+                <option value="Zakki">Zakki</option>
+                <option value="Lia">Lia</option>
+                <option value="Sofi">Sofi</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; gap: 10px;">
+            <button type="button" class="btn btn-secondary" id="strip-btn-retake" style="flex: 1;">
+              <i class="ph ph-arrow-counter-clockwise"></i> Foto Ulang
+            </button>
+            <button type="button" class="btn btn-primary" id="strip-btn-confirm" style="flex: 2;">
+              <i class="ph ph-check-circle"></i> Pasang ke Slot
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Toast Helper -->
+  <script>
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `toast-message toast-${type}`;
+      toast.textContent = message;
+
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 10);
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+
+  <!-- Scripts -->
+  <script src="scripts/compressor.js"></script>
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/photostrip.js"></script>
+</body>
+</html>

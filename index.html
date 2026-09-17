@@ -67,6 +67,12 @@
           <span id="label-toggle-hari-h">Simulasi Hari H</span>
         </button>
 
+        <!-- Photostrip link for desktop -->
+        <a href="photostrip.html" class="btn btn-outline btn-sm hide-on-mobile" title="Photostrip Kolaborasi 4-Slot">
+          <i class="ph ph-film-strip"></i>
+          <span>Photostrip</span>
+        </a>
+
         <!-- Global Camera trigger for desktop only (on mobile, handled by bottom nav bar) -->
         <button id="btn-open-camera-global" class="btn btn-camera hide-on-mobile">
           <i class="ph ph-camera"></i>
@@ -313,11 +319,11 @@
     <span>Foto Sekarang</span>
   </button>
 
-  <!-- Mobile Bottom Navigation Bar with Prominent 'Foto Sekarang' and Toast Integration -->
+  <!-- Mobile Bottom Navigation Bar with Prominent 'Foto Sekarang' and Photostrip Integration -->
   <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Navigasi Bawah Ponsel">
-    <a href="#countdown-section" class="bottom-nav-item">
-      <i class="ph ph-hourglass"></i>
-      <span>Jadwal</span>
+    <a href="#rundown-section" class="bottom-nav-item">
+      <i class="ph ph-map-pin"></i>
+      <span>Rundown</span>
     </a>
     <a href="#dresscode-section" class="bottom-nav-item">
       <i class="ph ph-t-shirt"></i>
@@ -330,13 +336,13 @@
       <span>Foto</span>
     </button>
 
-    <a href="#rundown-section" class="bottom-nav-item">
-      <i class="ph ph-map-pin"></i>
-      <span>Rute</span>
-    </a>
     <a href="#gallery-section" class="bottom-nav-item">
       <i class="ph ph-images"></i>
       <span>Galeri</span>
+    </a>
+    <a href="photostrip.html" class="bottom-nav-item" style="color: #D87A3E;">
+      <i class="ph ph-film-strip"></i>
+      <span>Photostrip</span>
     </a>
   </nav>
 
@@ -349,11 +355,6 @@
       <p class="footer-credits">
         Dibuat khusus untuk momen kebersamaan yang hangat • Dilengkapi kompresi gambar hemat kuota & integrasi Google Drive.
       </p>
-      <div style="margin-top: 14px;">
-        <button id="btn-footer-settings" class="btn btn-sm btn-outline" onclick="document.getElementById('settings-modal').classList.add('is-open')" style="font-size: 0.8rem; padding: 6px 16px; border-radius: var(--radius-full);">
-          <i class="ph ph-google-drive-logo" style="color: #2E7D32;"></i> Pengaturan Google Drive (Folder: Rundown Meetup)
-        </button>
-      </div>
     </div>
   </footer>
 
