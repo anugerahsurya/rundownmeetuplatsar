@@ -879,7 +879,10 @@
 .camera-stream-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  max-width: 380px;
+  margin: 0 auto;
+  aspect-ratio: 9 / 16;
+  max-height: 52vh;
   background: #110B08;
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -1026,10 +1029,15 @@
 }
 
 .camera-preview-img-box {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  aspect-ratio: 9 / 16;
+  max-height: 52vh;
   border-radius: var(--radius-md);
   overflow: hidden;
-  max-height: 380px;
-  background: #000;
+  background: #110B08;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1037,9 +1045,9 @@
 
 .camera-preview-img-box img {
   width: 100%;
-  height: auto;
-  max-height: 380px;
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* Processing Spinner */
@@ -1414,6 +1422,10 @@
   .btn-transit-compact {
     padding: 8px 10px;
     font-size: 0.78rem;
+  }
+  .camera-stream-container,
+  .camera-preview-img-box {
+    max-height: 46vh;
   }
 }
 

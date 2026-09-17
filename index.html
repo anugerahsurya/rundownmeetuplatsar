@@ -393,7 +393,7 @@
           </div>
 
           <!-- Compression Stats Indicator -->
-          <div class="compression-stats-card" style="margin-top: 16px;">
+          <div class="compression-stats-card" style="margin-top: 14px;">
             <div class="stats-col">
               <span class="stats-label">Ukuran Asli</span>
               <span class="stats-value" id="preview-raw-size">0 KB</span>
@@ -406,33 +406,33 @@
             <span class="stats-badge-savings" id="preview-saving-badge">Hemat 0%</span>
           </div>
 
+          <!-- Meta inputs (Diisi setelah foto diambil) -->
+          <div class="camera-meta-inputs" style="margin-top: 14px;">
+            <div class="form-group">
+              <label class="form-label" for="camera-spot-select">Lokasi Kegiatan</label>
+              <select id="camera-spot-select" class="form-control">
+                <!-- Populated dynamically from itinerary -->
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="camera-user-name">Nama Kamu</label>
+              <select id="camera-user-name" class="form-control">
+                <option value="Surya">Surya</option>
+                <option value="Zakki">Zakki</option>
+                <option value="Lia">Lia</option>
+                <option value="Sofi">Sofi</option>
+              </select>
+            </div>
+          </div>
+
           <div style="margin-top: 16px; display: flex; gap: 10px;">
-            <button class="btn btn-secondary" id="btn-retake-photo" style="flex: 1;">
+            <button type="button" class="btn btn-secondary" id="btn-retake-photo" style="flex: 1;">
               <i class="ph ph-arrow-counter-clockwise"></i> Foto Ulang
             </button>
-            <button class="btn btn-primary" id="btn-save-photo" style="flex: 2;">
+            <button type="button" class="btn btn-primary" id="btn-save-photo" style="flex: 2;">
               <i class="ph ph-check-circle"></i> Simpan & Unggah
             </button>
-          </div>
-        </div>
-
-        <!-- Meta inputs (Spot location & User Name) -->
-        <div class="camera-meta-inputs" style="margin-top: 14px;">
-          <div class="form-group">
-            <label class="form-label" for="camera-spot-select">Lokasi Kegiatan</label>
-            <select id="camera-spot-select" class="form-control">
-              <!-- Populated dynamically from itinerary -->
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="camera-user-name">Nama Kamu</label>
-            <select id="camera-user-name" class="form-control">
-              <option value="Surya">Surya</option>
-              <option value="Zakki">Zakki</option>
-              <option value="Lia">Lia</option>
-              <option value="Sofi">Sofi</option>
-            </select>
           </div>
         </div>
       </div>

@@ -110,11 +110,13 @@ const CameraApp = {
     const video = document.getElementById('camera-video-feed');
     if (!video) return;
 
+    const isMobile = window.innerWidth <= 768;
     const constraints = {
       video: {
         facingMode: { ideal: this.facingMode },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
+        width: { ideal: isMobile ? 1080 : 1920 },
+        height: { ideal: isMobile ? 1920 : 1080 },
+        aspectRatio: { ideal: 9 / 16 }
       },
       audio: false
     };
@@ -151,19 +153,46 @@ const CameraApp = {
 
   async capture() {
     const video = document.getElementById('camera-video-feed');
+    const streamContainer = document.getElementById('camera-stream-wrapper');
     if (!video || !this.stream) return;
 
+    const vw = video.videoWidth || 1080;
+    const vh = video.videoHeight || 1920;
+
+    // Determine target aspect ratio from the visible viewfinder container (default to 9:16 portrait)
+    const boxWidth = streamContainer && streamContainer.clientWidth ? streamContainer.clientWidth : 360;
+    const boxHeight = streamContainer && streamContainer.clientHeight ? streamContainer.clientHeight : 640;
+    const targetAspect = (boxWidth && boxHeight) ? (boxWidth / boxHeight) : (9 / 16);
+
+    const videoAspect = vw / vh;
+
+    let sx = 0;
+    let sy = 0;
+    let sw = vw;
+    let sh = vh;
+
+    // Perform exact WYSIWYG crop matching object-fit: cover
+    if (videoAspect > targetAspect) {
+      // Video is wider than viewfinder (e.g. landscape sensor feed in a portrait container)
+      sw = vh * targetAspect;
+      sh = vh;
+      sx = (vw - sw) / 2;
+      sy = 0;
+    } else {
+      // Video is taller than viewfinder
+      sw = vw;
+      sh = vw / targetAspect;
+      sx = 0;
+      sy = (vh - sh) / 2;
+    }
+
     const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
+    canvas.width = Math.round(sw);
+    canvas.height = Math.round(sh);
     const ctx = canvas.getContext('2d');
 
-    // If front camera, mirror horizontally for natural feel
-    if (this.facingMode === 'user') {
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-    }
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // NO MIRRORING: Captured exactly as seen (true orientation as requested)
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
     const rawDataUrl = canvas.toDataURL('image/jpeg', 0.95);
     this.capturedRawData = rawDataUrl;
