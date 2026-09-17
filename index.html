@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rundown Kegiatan Main | Hangout & Memory Vault</title>
+  <meta name="description" content="Web rundown kegiatan main bersama, dilengkapi countdown, dress code coklat & cream, kamera terintegrasi Google Drive, kompresi otomatis, dan galeri perjalanan.">
+
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+
+  <!-- Ambient Alive Layer: Subtle organic drifting orbs on pure white background -->
+  <div class="bg-ambient-layer">
+    <div class="ambient-orb ambient-orb-1"></div>
+    <div class="ambient-orb ambient-orb-2"></div>
+    <div class="ambient-orb ambient-orb-3"></div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#" class="brand-logo">
+        <div class="brand-icon">
+          <i class="ph ph-compass"></i>
+        </div>
+        <div>
+          <span class="brand-title">Rundown Main</span>
+          <span class="brand-subtitle">27 September 2026 • 07:30 - 17:00 WIB</span>
+        </div>
+      </a>
+
+      <div class="nav-actions">
+        <!-- Settings button hidden for public access -->
+        <button id="btn-open-settings" class="btn btn-secondary btn-icon-only" title="Pengaturan Google Drive & Tanggal" style="display: none !important;">
+          <i class="ph ph-gear" style="font-size: 1.25rem;"></i>
+        </button>
+
+        <!-- Mode Hari H Preview Toggle for testing -->
+        <button id="btn-toggle-hari-h" class="btn btn-secondary btn-sm" title="Beralih pratinjau tampilan saat Hari H (27 Sep 2026)">
+          <i class="ph ph-sparkle"></i>
+          <span id="label-toggle-hari-h">Simulasi Hari H</span>
+        </button>
+
+        <button id="btn-open-camera-global" class="btn btn-camera">
+          <i class="ph ph-camera"></i>
+          <span>Ambil Foto</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Section 0: Interactive 3D Sphere Preview (Diletakkan di paling atas ketika Hari H) -->
+    <section class="top-sphere-section" id="top-sphere-preview-section" style="display: none;">
+      <div class="container">
+        <div class="top-sphere-card">
+          <span class="sphere-badge-live">
+            <span class="sphere-live-dot"></span> Live Galeri Hari H • 27 September 2026
+          </span>
+          <h2 class="top-sphere-title">Bola Kenangan 3D Interaktif</h2>
+          <p class="top-sphere-desc">
+            Sentuh atau seret bola foto untuk memutar momen kebersamaan 4 sahabat secara 3D. Klik foto manapun untuk melihat tampilan penuh!
+          </p>
+
+          <div class="sphere-interactive-canvas-wrap">
+            <div id="sphere-3d-container" class="sphere-3d-box"></div>
+          </div>
+
+          <div>
+            <span class="sphere-hint-text">
+              <i class="ph ph-hand-pointing"></i> Geser mouse atau sentuh layar ponselmu untuk memutar bola foto
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 1: Hero & Countdown -->
+    <section class="hero-section" id="countdown-section">
+      <div class="container">
+        <div class="hero-card">
+          <div class="hero-header">
+            <span class="hero-tagline">
+              <i class="ph ph-sparkle"></i> Hari Kebersamaan & Petualangan 4 Sahabat
+            </span>
+            <h1 class="hero-main-title">Rundown Kegiatan Main</h1>
+            <p class="hero-date-text">
+              <i class="ph ph-calendar-blank"></i> Minggu, <strong>27 September 2026</strong> • Pukul <strong>07:30 WIB</strong> sampai <strong>17:00 WIB</strong>
+            </p>
+          </div>
+
+          <!-- Countdown Digits -->
+          <div class="countdown-box" id="countdown-timer-container">
+            <div class="countdown-digits">
+              <div class="countdown-unit">
+                <span class="unit-number" id="cd-days">00</span>
+                <span class="unit-label">Hari</span>
+              </div>
+              <span class="countdown-separator">:</span>
+              <div class="countdown-unit">
+                <span class="unit-number" id="cd-hours">00</span>
+                <span class="unit-label">Jam</span>
+              </div>
+              <span class="countdown-separator">:</span>
+              <div class="countdown-unit">
+                <span class="unit-number" id="cd-minutes">00</span>
+                <span class="unit-label">Menit</span>
+              </div>
+              <span class="countdown-separator">:</span>
+              <div class="countdown-unit">
+                <span class="unit-number" id="cd-seconds">00</span>
+                <span class="unit-label">Detik</span>
+              </div>
+            </div>
+
+            <div class="countdown-footer-status">
+              <span id="event-status-badge" class="status-pill status-upcoming">
+                ⏳ Menuju 27 September 2026
+              </span>
+              <p id="event-status-text" class="status-desc">
+                Mempersiapkan rute seru hari ini...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Dress Code Section -->
+    <section class="section" id="dresscode-section">
+      <div class="container">
+        <div class="section-title-wrap">
+          <span class="section-badge">Aturan Busana</span>
+          <h2 class="section-title">Dress Code Hari Ini</h2>
+          <p class="section-subtitle">
+            Kombinasi warna Coklat & Cream yang selaras dan estetik untuk foto kenangan terbaik bersama 4 sahabat.
+          </p>
+        </div>
+
+        <div class="dresscode-card">
+          <!-- Illustration Container -->
+          <div class="dresscode-illustration-wrapper">
+            <img src="assets/dresscode.jpg" alt="Ilustrasi 4 Sahabat (2 Cewe Berjilbab & 2 Cowo) dengan Dress Code Coklat dan Cream" class="dresscode-img">
+            <div class="dresscode-badge-overlay">
+              <i class="ph ph-palette"></i> Palette: Earthy Dark Brown & Warm Cream
+            </div>
+          </div>
+
+          <!-- Dresscode Details & Rules -->
+          <div class="dresscode-details">
+            <!-- Cowo Outfit -->
+            <div class="outfit-rule-card">
+              <div class="outfit-header">
+                <span class="outfit-role">
+                  <i class="ph ph-gender-male"></i> Pakaian Cowo
+                </span>
+                <span class="outfit-gender-pill pill-cowo">Atasan Coklat • Bawahan Cream</span>
+              </div>
+              <div class="outfit-specs">
+                <div class="spec-item">
+                  <span class="spec-type">Atasan (Top)</span>
+                  <div class="color-swatch-box">
+                    <span class="swatch-circle swatch-brown"></span>
+                    <span class="swatch-name">Coklat (Brown)</span>
+                  </div>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-type">Bawahan (Bottom)</span>
+                  <div class="color-swatch-box">
+                    <span class="swatch-circle swatch-cream"></span>
+                    <span class="swatch-name">Cream / Beige</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cewe Outfit -->
+            <div class="outfit-rule-card">
+              <div class="outfit-header">
+                <span class="outfit-role">
+                  <i class="ph ph-gender-female"></i> Pakaian Cewe
+                </span>
+                <span class="outfit-gender-pill pill-cewe">Atasan Cream • Bawahan Coklat</span>
+              </div>
+              <div class="outfit-specs">
+                <div class="spec-item">
+                  <span class="spec-type">Atasan (Top)</span>
+                  <div class="color-swatch-box">
+                    <span class="swatch-circle swatch-cream"></span>
+                    <span class="swatch-name">Cream / Beige</span>
+                  </div>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-type">Bawahan (Bottom)</span>
+                  <div class="color-swatch-box">
+                    <span class="swatch-circle swatch-brown"></span>
+                    <span class="swatch-name">Coklat (Brown)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Style note -->
+            <div class="dresscode-tips-box">
+              <i class="ph ph-lightbulb" style="font-size: 1.3rem; color: var(--accent-gold); flex-shrink: 0;"></i>
+              <div>
+                <strong>Tips Gaya:</strong> Anda bisa memakai kemeja, cardigan, polo, kaos rajut, rok plisket, atau celana chino santai. Padukan dengan sepatu kasual yang nyaman untuk jalan seharian!
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Itinerary Rundown -->
+    <section class="section" id="rundown-section">
+      <div class="container">
+        <div class="section-title-wrap">
+          <span class="section-badge">Jadwal Perjalanan</span>
+          <h2 class="section-title">Rundown Tempat & Waktu</h2>
+          <p class="section-subtitle">
+            5 destinasi utama dari pagi hingga sore. Setiap tempat memiliki spot foto unik yang wajib kamu abadikan!
+          </p>
+        </div>
+
+        <!-- Vertical Timeline -->
+        <div class="timeline-list" id="itinerary-timeline-container">
+          <!-- Populated by JavaScript RundownCountdown.renderItineraryList() -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Photo Gallery (Bottom) -->
+    <section class="section" id="gallery-section">
+      <div class="container">
+        <div class="section-title-wrap">
+          <span class="section-badge">Galeri Kenangan</span>
+          <h2 class="section-title">Hasil Foto Perjalanan</h2>
+          <p class="section-subtitle">
+            Semua foto telah dikompres otomatis secara instan agar web tetap super ringan dan cepat saat diload, serta tersimpan aman di Google Drive.
+          </p>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="gallery-controls-bar">
+          <div class="gallery-spot-filters" id="gallery-spot-filters">
+            <button class="filter-pill active" data-spot-id="all">Semua Lokasi</button>
+            <button class="filter-pill" data-spot-id="spot-1">Fotohokkie</button>
+            <button class="filter-pill" data-spot-id="spot-2">Obihiro Nikudon</button>
+            <button class="filter-pill" data-spot-id="spot-3">Don Bakeshop</button>
+            <button class="filter-pill" data-spot-id="spot-4">Family Mart</button>
+            <button class="filter-pill" data-spot-id="spot-5">Kampus Tercinta</button>
+          </div>
+
+          <div class="gallery-filter-right">
+            <select id="gallery-user-filter" class="select-input">
+              <option value="all">Semua Teman (Semua Pengunggah)</option>
+            </select>
+            <span class="gallery-count-badge" id="gallery-count-badge">0 Foto</span>
+          </div>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="gallery-grid" id="gallery-grid-container">
+          <!-- Populated by scripts/gallery.js -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="gallery-empty" id="gallery-empty-state" style="display: none;">
+          <div class="empty-icon">📷</div>
+          <h3 class="empty-title">Belum Ada Foto di Lokasi Ini</h3>
+          <p class="empty-subtitle">Jadilah yang pertama mengabadikan momen serumu di spot ini!</p>
+          <button class="btn btn-camera" onclick="CameraApp.open()">
+            <i class="ph ph-camera"></i> Buka Kamera & Upload
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Floating Camera Button for mobile -->
+  <button class="fab-camera" onclick="CameraApp.open()">
+    <i class="ph ph-camera" style="font-size: 1.25rem;"></i>
+    <span>Foto Sekarang</span>
+  </button>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        <i class="ph ph-heart" style="color: #E57373;"></i> Rundown Kegiatan Main
+      </div>
+      <p class="footer-credits">
+        Dibuat khusus untuk momen kebersamaan yang hangat • Dilengkapi kompresi gambar hemat kuota & integrasi Google Drive.
+      </p>
+    </div>
+  </footer>
+
+  <!-- =========================================================
+       MODALS
+       ========================================================= -->
+
+  <!-- Modal 1: Camera & Upload Modal -->
+  <div class="modal-overlay" id="camera-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="ph ph-camera"></i> Abadikan Momen Main
+        </h3>
+        <button class="modal-close-btn" id="camera-modal-close">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Viewfinder Screen -->
+        <div id="camera-viewfinder-screen">
+          <div class="camera-stream-container" id="camera-stream-wrapper">
+            <video id="camera-video-feed" autoplay playsinline muted></video>
+            <div id="camera-error-msg" style="position: absolute; inset: 0; display: none; padding: 24px; color: #FFF; text-align: center; justify-content: center; align-items: center; background: rgba(0,0,0,0.85); font-size: 0.9rem;"></div>
+          </div>
+
+          <div class="camera-controls-bar">
+            <!-- File input trigger (pick from existing photo/native camera) -->
+            <label for="camera-file-input" class="camera-action-btn" title="Pilih foto dari Galeri">
+              <i class="ph ph-image"></i>
+            </label>
+            <input type="file" id="camera-file-input" accept="image/*" style="display: none;">
+
+            <!-- Shutter button -->
+            <button class="shutter-btn" id="camera-shutter-btn" title="Jepret Foto">
+              <div class="shutter-inner"></div>
+            </button>
+
+            <!-- Switch camera -->
+            <button class="camera-action-btn" id="camera-switch-btn" title="Ganti Kamera Depan/Belakang">
+              <i class="ph ph-camera-rotate"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Processing Screen (when compressing) -->
+        <div class="processing-screen" id="camera-processing-screen" style="display: none;">
+          <div class="spinner"></div>
+          <h4>Mengompres Foto Otomatis...</h4>
+          <p style="font-size: 0.88rem; color: var(--text-secondary);">
+            Mengoptimalkan resolusi web agar loading galeri super enteng!
+          </p>
+        </div>
+
+        <!-- Preview & Review Screen (after capture/upload) -->
+        <div id="camera-preview-screen" style="display: none;">
+          <div class="camera-preview-img-box">
+            <img id="camera-preview-img" alt="Pratinjau Hasil Jepretan">
+          </div>
+
+          <!-- Compression Stats Indicator -->
+          <div class="compression-stats-card" style="margin-top: 16px;">
+            <div class="stats-col">
+              <span class="stats-label">Ukuran Asli</span>
+              <span class="stats-value" id="preview-raw-size">0 KB</span>
+            </div>
+            <i class="ph ph-arrow-right" style="color: var(--brown-400);"></i>
+            <div class="stats-col">
+              <span class="stats-label">Setelah Dikompres</span>
+              <span class="stats-value" id="preview-compressed-size" style="color: #2E7D32;">0 KB</span>
+            </div>
+            <span class="stats-badge-savings" id="preview-saving-badge">Hemat 0%</span>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; gap: 10px;">
+            <button class="btn btn-secondary" id="btn-retake-photo" style="flex: 1;">
+              <i class="ph ph-arrow-counter-clockwise"></i> Foto Ulang
+            </button>
+            <button class="btn btn-primary" id="btn-save-photo" style="flex: 2;">
+              <i class="ph ph-check-circle"></i> Simpan & Unggah
+            </button>
+          </div>
+        </div>
+
+        <!-- Meta inputs (Spot location & User Name) -->
+        <div class="camera-meta-inputs" style="margin-top: 14px;">
+          <div class="form-group">
+            <label class="form-label" for="camera-spot-select">Lokasi Kegiatan</label>
+            <select id="camera-spot-select" class="form-control">
+              <!-- Populated dynamically from itinerary -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="camera-user-name">Nama Kamu</label>
+            <input type="text" id="camera-user-name" class="form-control" placeholder="Contoh: Surya / Dinda" maxlength="30">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Lightbox Modal -->
+  <div class="modal-overlay" id="lightbox-modal">
+    <div class="modal-card lightbox-card">
+      <div class="lightbox-main-view">
+        <img id="lightbox-img" class="lightbox-img" alt="Detail Foto">
+      </div>
+
+      <div class="lightbox-details-panel">
+        <div class="lightbox-header-row">
+          <div>
+            <h3 class="lightbox-spot-title" id="lightbox-spot-name">Nama Lokasi</h3>
+            <div class="lightbox-meta-info">
+              <span><i class="ph ph-user"></i> <strong id="lightbox-user-name">Nama User</strong></span>
+              <span><i class="ph ph-clock"></i> <span id="lightbox-time">Waktu</span></span>
+            </div>
+          </div>
+          <div id="lightbox-drive-status" class="drive-sync-pill local">
+            Tersimpan Lokal
+          </div>
+        </div>
+
+        <div class="lightbox-compression-specs" id="lightbox-compression-info">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="lightbox-actions-row">
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn btn-sm btn-secondary" id="lightbox-download-btn">
+              <i class="ph ph-download-simple"></i> Unduh Foto
+            </button>
+            <a id="lightbox-drive-link-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary" style="display: none;">
+              <i class="ph ph-google-drive-logo"></i> Buka di Google Drive
+            </a>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button class="btn btn-sm btn-outline" id="lightbox-sync-drive-btn" title="Sinkronkan foto ini ke Google Drive">
+              <i class="ph ph-cloud-arrow-up"></i> Sync Drive
+            </button>
+            <button class="btn btn-sm btn-outline" id="lightbox-delete-btn" style="color: #E57373; border-color: rgba(229,115,115,0.4);" title="Hapus Foto">
+              <i class="ph ph-trash"></i> Hapus
+            </button>
+            <button class="btn btn-sm btn-secondary" id="lightbox-close-btn">
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Settings & Google Drive Integration Setup -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="ph ph-gear"></i> Pengaturan & Google Drive
+        </h3>
+        <button class="modal-close-btn" id="settings-modal-close">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="settings-form">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="setting-user-name">Nama Panggilan Default Anda</label>
+            <input type="text" id="setting-user-name" class="form-control" placeholder="Nama Anda (muncul di tiap unggahan)">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="setting-event-date">Tanggal Kegiatan Main</label>
+            <input type="date" id="setting-event-date" class="form-control">
+            <small style="color: var(--text-muted); font-size: 0.78rem;">Countdown otomatis menghitung mundur ke jam 07:30 pada tanggal ini.</small>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 16px 0;">
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="setting-script-url">
+              <i class="ph ph-google-drive-logo"></i> Google Apps Script Web App URL
+            </label>
+            <input type="url" id="setting-script-url" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+            <small style="color: var(--text-muted); font-size: 0.78rem;">
+              Setiap foto yang diambil akan langsung terkirim otomatis ke folder Google Drive Anda.
+            </small>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label class="form-label" for="setting-folder-id">ID Folder Google Drive (Opsional)</label>
+            <input type="text" id="setting-folder-id" class="form-control" placeholder="Biarkan kosong untuk menggunakan folder default 'Dokumentasi Rundown Main'">
+          </div>
+
+          <!-- Quick 1-minute setup tutorial -->
+          <div class="settings-guide-box">
+            <strong>Cara Menghubungkan Google Drive (Gratis & 1 Menit):</strong>
+            <ol>
+              <li>Buka file <code>google_apps_script.js</code> di folder proyek ini dan salin isinya.</li>
+              <li>Buka <a href="https://script.google.com/" target="_blank" rel="noopener noreferrer" style="color: var(--brown-700); text-decoration: underline;">script.google.com</a> dan buat <em>New Project</em>.</li>
+              <li>Tempelkan kodenya lalu klik <strong>Deploy &gt; New deployment &gt; Web app</strong>.</li>
+              <li>Pilih <em>Execute as: Me</em> dan <em>Who has access: Anyone</em>, lalu klik Deploy.</li>
+              <li>Salin URL Web App yang berakhiran <code>/exec</code> ke kolom di atas dan klik Simpan!</li>
+            </ol>
+            <div style="margin-top: 8px; font-style: italic; color: var(--text-muted);">
+              *Catatan: Jika belum diisi, foto tetap tersimpan aman di browser Anda menggunakan IndexedDB offline.
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('settings-modal').classList.remove('is-open')">Batal</button>
+            <button type="submit" class="btn btn-primary">Simpan Pengaturan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Sphere Spotlight Modal (Preview Foto 3D) -->
+  <div class="sphere-modal-overlay" id="sphere-spotlight-modal" onclick="SpherePreviewApp.closeSpotlight()">
+    <div class="sphere-modal-card" onclick="event.stopPropagation()">
+      <button class="sphere-modal-close-btn" onclick="SpherePreviewApp.closeSpotlight()" title="Tutup">
+        <i class="ph ph-x"></i>
+      </button>
+      <img id="sphere-spotlight-img" class="sphere-modal-img" alt="Pratinjau Foto 3D">
+      <div class="sphere-modal-content">
+        <h3 id="sphere-spotlight-title" class="sphere-modal-title">Judul Foto</h3>
+        <p id="sphere-spotlight-desc" class="sphere-modal-desc">Deskripsi foto...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="scripts/compressor.js"></script>
+  <script src="scripts/storage.js"></script>
+  <script src="scripts/countdown.js"></script>
+  <script src="scripts/camera.js"></script>
+  <script src="scripts/sphere-preview.js"></script>
+  <script src="scripts/gallery.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
+</html>
