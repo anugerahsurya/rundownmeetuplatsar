@@ -63,12 +63,6 @@ const PhotoGallery = {
       downloadBtn.addEventListener('click', () => this.downloadCurrentPhoto());
     }
 
-    // Lightbox delete
-    const deleteBtn = document.getElementById('lightbox-delete-btn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', () => this.deleteCurrentPhoto());
-    }
-
     // Lightbox resync Drive
     const syncBtn = document.getElementById('lightbox-sync-drive-btn');
     if (syncBtn) {
@@ -264,19 +258,6 @@ const PhotoGallery = {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  },
-
-  async deleteCurrentPhoto() {
-    if (!this.currentViewingPhoto) return;
-    if (!confirm('Apakah Anda yakin ingin menghapus foto kenangan ini dari web?')) return;
-
-    await AppStorage.deletePhoto(this.currentViewingPhoto.id);
-    this.closeLightbox();
-    showToast('Foto berhasil dihapus', 'info');
-    await this.loadPhotos();
-    if (window.SpherePreviewApp) {
-      window.SpherePreviewApp.refreshPhotos();
-    }
   },
 
   async resyncCurrentPhoto() {
