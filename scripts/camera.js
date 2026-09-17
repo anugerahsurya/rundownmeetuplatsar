@@ -299,6 +299,11 @@ const CameraApp = {
         window.PhotoGallery.loadPhotos();
       }
 
+      // Refresh 3D sphere preview with newly added real photos
+      if (window.SpherePreviewApp) {
+        window.SpherePreviewApp.refreshPhotos();
+      }
+
       // Scroll to gallery section smoothly
       const gallerySec = document.getElementById('gallery-section');
       if (gallerySec) {

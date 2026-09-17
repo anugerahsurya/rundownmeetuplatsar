@@ -255,6 +255,9 @@ const PhotoGallery = {
     this.closeLightbox();
     showToast('Foto berhasil dihapus', 'info');
     await this.loadPhotos();
+    if (window.SpherePreviewApp) {
+      window.SpherePreviewApp.refreshPhotos();
+    }
   },
 
   async resyncCurrentPhoto() {

@@ -131,34 +131,46 @@ const SpherePreviewApp = {
   async loadImages() {
     try {
       const stored = await AppStorage.getAllPhotos();
-      let photoList = [];
+      
+      const userPhotos = (stored || []).map(p => ({
+        id: `db-${p.id}`,
+        src: p.thumbDataUrl || p.webDataUrl,
+        alt: `Foto di ${p.spotName} oleh ${p.userName}`,
+        title: p.spotName,
+        description: `Diambil oleh ${p.userName} pada ${new Date(p.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`
+      }));
 
-      if (stored && stored.length > 0) {
-        photoList = stored.map(p => ({
-          id: `db-${p.id}`,
-          src: p.thumbDataUrl || p.webDataUrl,
-          alt: `Foto di ${p.spotName} oleh ${p.userName}`,
-          title: p.spotName,
-          description: `Diambil oleh ${p.userName} pada ${new Date(p.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`
-        }));
+      // OTOMATIS: Jika user sudah memasukkan foto, 100% foto dummy dihilangkan
+      // dan bola 3D sepenuhnya diisi oleh foto-foto asli yang diambil user!
+      if (userPhotos.length > 0) {
+        const filled = [];
+        // Pastikan bola foto terdistribusi secara penuh (minimal 24 titik) dengan mendistribusikan foto asli user
+        const targetCount = Math.max(userPhotos.length, 24);
+        for (let i = 0; i < targetCount; i++) {
+          const basePhoto = userPhotos[i % userPhotos.length];
+          filled.push({
+            ...basePhoto,
+            id: `real-${i + 1}-${basePhoto.id}`
+          });
+        }
+        this.images = filled;
+      } else {
+        // Belum ada foto yang diupload user sama sekali: tampilkan placeholder dummy sementara
+        this.images = this.defaultImages;
       }
-
-      // If fewer than 18 items, combine with default images to give the 3D sphere rich coverage
-      const combined = [...photoList];
-      let counter = 0;
-      while (combined.length < 24) {
-        const item = this.defaultImages[counter % this.defaultImages.length];
-        combined.push({
-          ...item,
-          id: `item-${combined.length + 1}`
-        });
-        counter++;
-      }
-
-      this.images = combined;
     } catch (e) {
       console.warn('SpherePreview: Fallback to default images', e);
       this.images = this.defaultImages;
+    }
+  },
+
+  async refreshPhotos() {
+    await this.loadImages();
+    this.generateSpherePositions();
+    const container = document.getElementById(this.containerId);
+    if (container) {
+      const inner = container.querySelector('.sphere-inner-plane');
+      if (inner) inner.innerHTML = '';
     }
   },
 
