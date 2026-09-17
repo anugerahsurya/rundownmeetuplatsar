@@ -118,13 +118,12 @@ const CameraApp = {
     const video = document.getElementById('camera-video-feed');
     if (!video) return;
 
-    const isMobile = window.innerWidth <= 768;
+    // Use natural full optical resolution without forcing aggressive 9:16 sensor crop
     const constraints = {
       video: {
         facingMode: { ideal: this.facingMode },
-        width: { ideal: isMobile ? 1080 : 1920 },
-        height: { ideal: isMobile ? 1920 : 1080 },
-        aspectRatio: { ideal: 9 / 16 }
+        width: { ideal: 1920 },
+        height: { ideal: 1440 }
       },
       audio: false
     };
@@ -200,13 +199,13 @@ const CameraApp = {
     const streamContainer = document.getElementById('camera-stream-wrapper');
     if (!video || !this.stream) return;
 
-    const vw = video.videoWidth || 1080;
+    const vw = video.videoWidth || 1440;
     const vh = video.videoHeight || 1920;
 
-    // Determine target aspect ratio from the visible viewfinder container (default to 9:16 portrait)
+    // Determine target aspect ratio from the visible viewfinder container (default to 3:4 portrait)
     const boxWidth = streamContainer && streamContainer.clientWidth ? streamContainer.clientWidth : 360;
-    const boxHeight = streamContainer && streamContainer.clientHeight ? streamContainer.clientHeight : 640;
-    const targetAspect = (boxWidth && boxHeight) ? (boxWidth / boxHeight) : (9 / 16);
+    const boxHeight = streamContainer && streamContainer.clientHeight ? streamContainer.clientHeight : 480;
+    const targetAspect = (boxWidth && boxHeight) ? (boxWidth / boxHeight) : (3 / 4);
 
     const videoAspect = vw / vh;
 

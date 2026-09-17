@@ -879,9 +879,9 @@
 .camera-stream-container {
   position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 420px;
   margin: 0 auto;
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 3 / 4;
   max-height: 52vh;
   background: #110B08;
   border-radius: var(--radius-md);
@@ -1032,9 +1032,9 @@
 .camera-preview-img-box {
   position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 420px;
   margin: 0 auto;
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 3 / 4;
   max-height: 52vh;
   border-radius: var(--radius-md);
   overflow: hidden;
