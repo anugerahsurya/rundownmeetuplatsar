@@ -276,9 +276,6 @@ const RundownCountdown = {
     if (!container) return;
 
     container.innerHTML = this.itinerary.map((spot, index) => {
-      const tjBadges = spot.transit.tj.map(r => `<span class="transit-pill pill-tj"><i class="ph ph-bus"></i> ${r}</span>`).join('');
-      const jaklingkoBadges = spot.transit.jaklingko.map(r => `<span class="transit-pill pill-jaklingko"><i class="ph ph-van"></i> ${r}</span>`).join('');
-
       return `
         <div class="timeline-item" id="card-${spot.id}">
           <div class="timeline-marker">
@@ -298,17 +295,13 @@ const RundownCountdown = {
             <p class="spot-desc">${spot.desc}</p>
             <p class="spot-address"><i class="ph ph-map-pin"></i> ${spot.address}</p>
 
-            <!-- Public Transit Recommendations (TJ, JakLingko, KRL, MRT) -->
-            <div class="transit-box">
-              <div class="transit-box-title">
-                <i class="ph ph-train"></i> Rekomendasi Kendaraan Umum:
-              </div>
-              <div class="transit-pills-wrap">
-                ${tjBadges}
-                ${jaklingkoBadges}
-                <span class="transit-pill pill-krl"><i class="ph ph-train-simple"></i> KRL: ${spot.transit.krl}</span>
-                ${spot.transit.mrt ? `<span class="transit-pill pill-mrt"><i class="ph ph-subway"></i> MRT/LRT: ${spot.transit.mrt}</span>` : ''}
-              </div>
+            <!-- Compact Transit Trigger Button (Hemat tempat di mobile, muncul pop-up saat diklik) -->
+            <div class="spot-transit-compact">
+              <button class="btn btn-transit-compact" onclick="RundownCountdown.openTransitModal('${spot.id}')" title="Buka penjelasan rute angkutan umum">
+                <i class="ph ph-bus"></i>
+                <span>Lihat Panduan Rute & Angkutan Umum</span>
+                <i class="ph ph-arrow-right" style="font-size: 0.9rem;"></i>
+              </button>
             </div>
 
             <div class="spot-actions">
@@ -316,7 +309,7 @@ const RundownCountdown = {
                 <i class="ph ph-camera"></i> Ambil Foto di Sini
               </button>
               <a href="${spot.mapUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline">
-                <i class="ph ph-navigation-arrow"></i> Petunjuk Rute Google Maps
+                <i class="ph ph-navigation-arrow"></i> Google Maps
               </a>
             </div>
           </div>
@@ -331,6 +324,72 @@ const RundownCountdown = {
         `<option value="${spot.id}">${spot.name}</option>`
       ).join('');
     }
+  },
+
+  openTransitModal(spotId) {
+    const spot = this.itinerary.find(s => s.id === spotId);
+    if (!spot) return;
+
+    const modal = document.getElementById('transit-info-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('transit-modal-title');
+    const subEl = document.getElementById('transit-modal-subtitle');
+    const iconEl = document.getElementById('transit-modal-icon');
+    const mapLink = document.getElementById('transit-modal-map-link');
+    const contentEl = document.getElementById('transit-modal-content');
+
+    if (titleEl) titleEl.textContent = spot.name;
+    if (subEl) subEl.textContent = `${spot.timeRange} • ${spot.address}`;
+    if (iconEl) iconEl.textContent = spot.icon;
+    if (mapLink) mapLink.href = spot.mapUrl;
+
+    const tjItems = spot.transit.tj.map(r => `
+      <li class="transit-list-item">
+        <span class="transit-badge badge-tj">TJ</span>
+        <span>${r}</span>
+      </li>
+    `).join('');
+
+    const jakItems = spot.transit.jaklingko.map(r => `
+      <li class="transit-list-item">
+        <span class="transit-badge badge-jaklingko">JakLingko</span>
+        <span>${r}</span>
+      </li>
+    `).join('');
+
+    if (contentEl) {
+      contentEl.innerHTML = `
+        <div class="transit-pop-group">
+          <h4 class="transit-pop-heading"><i class="ph ph-bus"></i> TransJakarta (TJ)</h4>
+          <ul class="transit-pop-list">${tjItems}</ul>
+        </div>
+
+        <div class="transit-pop-group">
+          <h4 class="transit-pop-heading"><i class="ph ph-van"></i> JakLingko (Mikrotrans)</h4>
+          <ul class="transit-pop-list">${jakItems}</ul>
+        </div>
+
+        <div class="transit-pop-group">
+          <h4 class="transit-pop-heading"><i class="ph ph-train-simple"></i> KRL Commuter Line</h4>
+          <p class="transit-pop-text">${spot.transit.krl}</p>
+        </div>
+
+        ${spot.transit.mrt ? `
+          <div class="transit-pop-group">
+            <h4 class="transit-pop-heading"><i class="ph ph-subway"></i> MRT / LRT</h4>
+            <p class="transit-pop-text">${spot.transit.mrt}</p>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    modal.classList.add('is-open');
+  },
+
+  closeTransitModal() {
+    const modal = document.getElementById('transit-info-modal');
+    if (modal) modal.classList.remove('is-open');
   }
 };
 

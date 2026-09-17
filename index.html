@@ -36,7 +36,7 @@
         </div>
         <div>
           <span class="brand-title">Rundown Main</span>
-          <span class="brand-subtitle">27 September 2026 • 07:30 - 17:00 WIB</span>
+          <span class="brand-subtitle hide-on-mobile">27 September 2026 • 07:30 - 17:00 WIB</span>
         </div>
       </a>
 
@@ -52,7 +52,8 @@
           <span id="label-toggle-hari-h">Simulasi Hari H</span>
         </button>
 
-        <button id="btn-open-camera-global" class="btn btn-camera">
+        <!-- Global Camera trigger for desktop only (on mobile, handled by bottom nav bar) -->
+        <button id="btn-open-camera-global" class="btn btn-camera hide-on-mobile">
           <i class="ph ph-camera"></i>
           <span>Ambil Foto</span>
         </button>
@@ -86,17 +87,14 @@
       </div>
     </section>
 
-    <!-- Section 1: Hero & Countdown -->
+    <!-- Section 1: Hero & Countdown (Clean, Non-AI-Slop Header) -->
     <section class="hero-section" id="countdown-section">
       <div class="container">
         <div class="hero-card">
           <div class="hero-header">
-            <span class="hero-tagline">
-              <i class="ph ph-sparkle"></i> Hari Kebersamaan & Petualangan 4 Sahabat
-            </span>
-            <h1 class="hero-main-title">Rundown Kegiatan Main</h1>
+            <h1 class="hero-main-title">Hangout & Temu Kangen Latsar</h1>
             <p class="hero-date-text">
-              <i class="ph ph-calendar-blank"></i> Minggu, <strong>27 September 2026</strong> • Pukul <strong>07:30 WIB</strong> sampai <strong>17:00 WIB</strong>
+              <i class="ph ph-calendar-blank"></i> Minggu, <strong>27 September 2026</strong> • Pukul <strong>07:30 - 17:00 WIB</strong>
             </p>
           </div>
 
@@ -149,11 +147,13 @@
         </div>
 
         <div class="dresscode-card">
-          <!-- Illustration Container -->
-          <div class="dresscode-illustration-wrapper">
-            <img src="assets/dresscode.jpg" alt="Ilustrasi 4 Sahabat (2 Cewe Berjilbab & 2 Cowo) dengan Dress Code Coklat dan Cream" class="dresscode-img">
-            <div class="dresscode-badge-overlay">
-              <i class="ph ph-palette"></i> Palette: Earthy Dark Brown & Warm Cream
+          <!-- Illustration Container (Unobstructed: No overlay covering the 4 friends) -->
+          <div class="dresscode-illustration-box">
+            <div class="dresscode-illustration-wrapper">
+              <img src="assets/dresscode.jpg" alt="Ilustrasi 4 Sahabat (2 Cewe Berjilbab & 2 Cowo) dengan Dress Code Coklat dan Cream" class="dresscode-img">
+            </div>
+            <div class="dresscode-palette-bar">
+              <i class="ph ph-palette"></i> <span>Palette Busana: <strong>Earthy Dark Brown</strong> & <strong>Warm Cream</strong></span>
             </div>
           </div>
 
@@ -566,6 +566,37 @@
       <div class="sphere-modal-content">
         <h3 id="sphere-spotlight-title" class="sphere-modal-title">Judul Foto</h3>
         <p id="sphere-spotlight-desc" class="sphere-modal-desc">Deskripsi foto...</p>
+      </div>
+    </div>
+  <!-- Modal 5: Transit Route Popup (Penjelasan Rute Kendaraan Umum) -->
+  <div class="modal-overlay" id="transit-info-modal" onclick="RundownCountdown.closeTransitModal()">
+    <div class="modal-card transit-modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="transit-modal-header-icon" id="transit-modal-icon">📸</div>
+          <div>
+            <h3 class="modal-title" id="transit-modal-title" style="font-size: 1.15rem; margin-bottom: 2px;">Rute Kendaraan Umum</h3>
+            <span class="transit-modal-subtitle" id="transit-modal-subtitle" style="font-size: 0.8rem; color: var(--text-muted); display: block;">Panduan Transportasi</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="RundownCountdown.closeTransitModal()" title="Tutup">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <div id="transit-modal-content" class="transit-detail-list">
+          <!-- Populated by RundownCountdown.openTransitModal(spotId) -->
+        </div>
+
+        <div style="margin-top: 22px; display: flex; gap: 10px;">
+          <a id="transit-modal-map-link" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="flex: 1; font-size: 0.88rem;">
+            <i class="ph ph-navigation-arrow"></i> Buka Google Maps
+          </a>
+          <button type="button" class="btn btn-secondary" onclick="RundownCountdown.closeTransitModal()">
+            Tutup
+          </button>
+        </div>
       </div>
     </div>
   </div>

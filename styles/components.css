@@ -171,20 +171,19 @@
   transform: scale(1.02);
 }
 
-.dresscode-badge-overlay {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  background: rgba(38, 23, 16, 0.82);
-  backdrop-filter: blur(8px);
-  color: var(--cream-100);
-  padding: 6px 14px;
+.dresscode-palette-bar {
+  margin-top: 12px;
+  background: var(--cream-100);
+  border: 1px solid var(--cream-300);
+  color: var(--brown-800);
+  padding: 8px 16px;
   border-radius: var(--radius-full);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
 }
 
 .dresscode-details {
@@ -1308,82 +1307,136 @@
 }
 
 /* =========================================================
-   PUBLIC TRANSIT RECOMMENDATIONS (TJ, JakLingko, KRL, MRT)
+   PUBLIC TRANSIT RECOMMENDATIONS POPUP & COMPACT TRIGGER
    ========================================================= */
-.transit-box {
-  margin: 14px 0 16px 0;
-  padding: 12px 16px;
-  background: var(--cream-50);
-  border: 1px solid var(--cream-200);
+.spot-transit-compact {
+  margin: 12px 0 16px 0;
+}
+
+.btn-transit-compact {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--cream-100);
+  border: 1px solid var(--cream-300);
+  color: var(--brown-900);
+  padding: 10px 14px;
   border-radius: var(--radius-sm);
-  transition: var(--transition-smooth);
-}
-
-.transit-box:hover {
-  border-color: var(--brown-300);
-  background: #FFFFFF;
-}
-
-.transit-box-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--brown-800);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.transit-pills-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.transit-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  padding: 5px 11px;
-  border-radius: var(--radius-full);
-  line-height: 1.3;
+  cursor: pointer;
   transition: var(--transition-smooth);
+  text-align: left;
 }
 
-.transit-pill:hover {
+.btn-transit-compact:hover {
+  background: #FFFFFF;
+  border-color: var(--brown-500);
+  box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
 }
 
-/* TransJakarta: Classic Blue / Orange Brand Accent */
-.pill-tj {
+.btn-transit-compact i:first-child {
+  font-size: 1.15rem;
+  color: var(--brown-700);
+  flex-shrink: 0;
+}
+
+.btn-transit-compact i:last-child {
+  margin-left: auto;
+  color: var(--brown-500);
+}
+
+/* Transit Modal Pop-up */
+.transit-modal-card {
+  max-width: 520px;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+}
+
+.transit-modal-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--cream-100);
+  border: 1px solid var(--cream-300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.transit-pop-group {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.transit-pop-group:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.transit-pop-heading {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--brown-900);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.transit-pop-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.transit-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.transit-badge {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.badge-tj {
   background: #EBF3FA;
   color: #0E4F8B;
-  border: 1px solid rgba(14, 79, 139, 0.22);
+  border: 1px solid rgba(14, 79, 139, 0.25);
 }
 
-/* JakLingko: Fresh Emerald / Teal Accent */
-.pill-jaklingko {
+.badge-jaklingko {
   background: #EAF6F0;
   color: #166534;
-  border: 1px solid rgba(22, 101, 52, 0.22);
+  border: 1px solid rgba(22, 101, 52, 0.25);
 }
 
-/* KRL Commuter Line: Distinctive Warm Brick / Crimson Accent */
-.pill-krl {
-  background: #FDF1EE;
-  color: #9C2A1E;
-  border: 1px solid rgba(156, 42, 30, 0.22);
-}
-
-/* MRT / LRT: Elegant Indigo Accent */
-.pill-mrt {
-  background: #F0EDF9;
-  color: #432874;
-  border: 1px solid rgba(67, 40, 116, 0.22);
+.transit-pop-text {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  background: var(--cream-50);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cream-200);
 }
 
 /* =========================================================
