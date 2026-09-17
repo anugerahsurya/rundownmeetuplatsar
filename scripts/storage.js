@@ -127,10 +127,27 @@ const AppStorage = {
   },
 
   /**
-   * Sync and fetch all photos stored in the "Rundown Meetup" Google Drive folder
-   * Enables multi-device visibility (e.g. photos uploaded from phone appear on laptop/other phones)
+   * Clear all local photo records from IndexedDB
    */
-  async syncFromDrive() {
+  async clearAllPhotos() {
+    if (!this.db) await this.init();
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('photos', 'readwrite');
+      const store = tx.objectStore('photos');
+      const req = store.clear();
+      req.onsuccess = () => resolve(true);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  /**
+   * Sync and fetch all photos stored in the "Rundown Meetup" Google Drive folder
+   * Two-way reconciliation:
+   * 1. Google Drive is the authoritative source of truth.
+   * 2. Any photo deleted from Google Drive is automatically deleted from local storage immediately.
+   * 3. Prevents browser or proxy caching by using dynamic cache-buster timestamps.
+   */
+  async syncFromDrive(forceClean = false) {
     if (!this.db) await this.init();
     const settings = this.getSettings();
     if (!settings.scriptUrl || settings.scriptUrl.trim() === '') {
@@ -138,7 +155,9 @@ const AppStorage = {
     }
 
     try {
-      const response = await fetch(settings.scriptUrl, {
+      // Use cache-busting timestamp param to ensure neither browser nor CDN/proxy serves cached data
+      const cacheBuster = (settings.scriptUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+      const response = await fetch(settings.scriptUrl + cacheBuster, {
         method: 'GET',
         cache: 'no-store'
       });
@@ -152,19 +171,66 @@ const AppStorage = {
         return { success: false, updated: false, message: resJson.message || 'Format data Drive tidak sesuai' };
       }
 
-      const currentLocalPhotos = await this.getAllPhotos();
-      let newCount = 0;
+      const drivePhotos = resJson.photos;
+      const driveFileIds = new Set(drivePhotos.map(p => String(p.driveFileId || p.id)));
 
-      for (const driveItem of resJson.photos) {
-        // Check if item already exists locally by driveFileId or (spotName + timestamp)
-        const exists = currentLocalPhotos.some(p => 
-          (p.driveFileId && p.driveFileId === driveItem.driveFileId) ||
-          (p.driveFileId && p.driveFileId === driveItem.id) ||
+      if (forceClean) {
+        await this.clearAllPhotos();
+      }
+
+      const currentLocalPhotos = await this.getAllPhotos();
+      let stateChanged = false;
+
+      // 1. PURGE DELETED PHOTOS:
+      // If user deleted photos in Google Drive, remove them from local storage immediately
+      if (drivePhotos.length === 0) {
+        // If Google Drive folder is empty, purge all local synced/old photos
+        for (const localPhoto of currentLocalPhotos) {
+          if (localPhoto.syncStatus !== 'syncing') {
+            await this.deletePhoto(localPhoto.id);
+            stateChanged = true;
+          }
+        }
+      } else {
+        for (const localPhoto of currentLocalPhotos) {
+          const hasDriveRecord = localPhoto.driveFileId ? driveFileIds.has(String(localPhoto.driveFileId)) : false;
+          
+          if (localPhoto.driveFileId && !hasDriveRecord) {
+            // Photo was uploaded to Drive earlier, but user deleted it from Drive: purge it!
+            await this.deletePhoto(localPhoto.id);
+            stateChanged = true;
+          } else if (localPhoto.syncStatus === 'synced' && (!localPhoto.driveFileId || !hasDriveRecord)) {
+            await this.deletePhoto(localPhoto.id);
+            stateChanged = true;
+          } else if (localPhoto.syncStatus === 'local' || localPhoto.syncStatus === 'error') {
+            // Check if this local photo is missing from Drive
+            const existsInDrive = drivePhotos.some(dp => 
+              (dp.timestamp && dp.timestamp === localPhoto.timestamp && dp.userName === localPhoto.userName)
+            );
+            if (!existsInDrive) {
+              // Delete stale orphaned photo from local store
+              await this.deletePhoto(localPhoto.id);
+              stateChanged = true;
+            }
+          }
+        }
+      }
+
+      // Re-read local photos after deletion
+      const updatedLocalPhotos = await this.getAllPhotos();
+
+      // 2. ADD NEW PHOTOS FROM DRIVE:
+      for (const driveItem of drivePhotos) {
+        const driveId = String(driveItem.driveFileId || driveItem.id);
+        const exists = updatedLocalPhotos.some(p => 
+          (p.driveFileId && String(p.driveFileId) === driveId) ||
           (driveItem.timestamp && p.timestamp === driveItem.timestamp && p.userName === driveItem.userName)
         );
 
         if (!exists) {
-          // Add newly discovered photo from Drive to local IndexedDB
+          const imgUrl = driveItem.webDataUrl || driveItem.driveUrl;
+          const thumbUrl = driveItem.thumbDataUrl || driveItem.thumbUrl || imgUrl;
+
           const newRecord = {
             spotId: driveItem.spotId || 'spot-1',
             spotName: driveItem.spotName || 'Rundown Spot',
@@ -175,11 +241,11 @@ const AppStorage = {
             webSize: 0,
             webFormattedSize: driveItem.webFormattedSize || 'Cloud',
             savingsPercent: driveItem.savingsPercent || 0,
-            webDataUrl: driveItem.webDataUrl || driveItem.driveUrl,
-            thumbDataUrl: driveItem.thumbDataUrl || driveItem.thumbUrl || driveItem.webDataUrl,
+            webDataUrl: imgUrl,
+            thumbDataUrl: thumbUrl,
             syncStatus: 'synced',
             driveUrl: driveItem.driveUrl,
-            driveFileId: driveItem.driveFileId || driveItem.id,
+            driveFileId: driveId,
             driveError: null
           };
 
@@ -191,15 +257,22 @@ const AppStorage = {
             req.onerror = () => reject(req.error);
           });
 
-          newCount++;
+          stateChanged = true;
         }
       }
 
-      return { success: true, updated: newCount > 0, count: newCount };
+      return { success: true, updated: stateChanged, totalInDrive: drivePhotos.length };
     } catch (err) {
       console.warn('syncFromDrive error:', err);
       return { success: false, updated: false, error: err.message };
     }
+  },
+
+  /**
+   * Force clean cache & re-sync from Google Drive
+   */
+  async purgeLocalCacheAndSync() {
+    return await this.syncFromDrive(true);
   },
 
   /**

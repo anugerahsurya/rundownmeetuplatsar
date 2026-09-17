@@ -556,7 +556,8 @@
 .gallery-filter-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .gallery-count-badge {

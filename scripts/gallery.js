@@ -82,16 +82,42 @@ const PhotoGallery = {
   async syncFromDriveBackground() {
     try {
       const res = await AppStorage.syncFromDrive();
-      if (res && res.updated) {
+      if (res && (res.updated || res.success)) {
         this.photos = await AppStorage.getAllPhotos();
         this.populateUserFilterOptions();
         this.render();
-        if (window.SphereGallery && typeof window.SphereGallery.renderSphere === 'function') {
-          window.SphereGallery.renderSphere();
+        if (window.SpherePreviewApp && typeof window.SpherePreviewApp.refreshPhotos === 'function') {
+          window.SpherePreviewApp.refreshPhotos();
         }
       }
     } catch (e) {
       console.warn('Sync from drive notice:', e);
+    }
+  },
+
+  async forceRefreshFromDrive() {
+    if (typeof showToast === 'function') {
+      showToast('Menghubungkan langsung ke Google Drive... 🔄', 'info');
+    }
+    try {
+      const res = await AppStorage.purgeLocalCacheAndSync();
+      this.photos = await AppStorage.getAllPhotos();
+      this.populateUserFilterOptions();
+      this.render();
+      if (window.SpherePreviewApp && typeof window.SpherePreviewApp.refreshPhotos === 'function') {
+        window.SpherePreviewApp.refreshPhotos();
+      }
+      if (typeof showToast === 'function') {
+        if (res.success) {
+          showToast(`Galeri diperbarui dari Google Drive (${this.photos.length} foto) ✅`, 'success');
+        } else {
+          showToast(res.message || 'Tidak dapat terhubung ke Google Drive', 'warning');
+        }
+      }
+    } catch (err) {
+      if (typeof showToast === 'function') {
+        showToast('Gagal sinkronisasi: ' + err.message, 'error');
+      }
     }
   },
 
