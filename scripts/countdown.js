@@ -284,11 +284,13 @@ const RundownCountdown = {
           </div>
           <div class="timeline-content-card">
             <div class="spot-header">
-              <div class="spot-time-meta">
+              <div class="spot-header-top">
                 <span class="spot-time"><i class="ph ph-clock"></i> ${spot.timeRange}</span>
+                <span id="badge-${spot.id}" class="spot-status-tag status-tag-upcoming">Akan Datang</span>
+              </div>
+              <div class="spot-category-wrap">
                 <span class="spot-category">${spot.category}</span>
               </div>
-              <span id="badge-${spot.id}" class="spot-status-tag status-tag-upcoming">Akan Datang</span>
             </div>
             
             <h3 class="spot-title">${spot.name}</h3>
@@ -297,10 +299,10 @@ const RundownCountdown = {
 
             <!-- Compact Transit Trigger Button (Hemat tempat di mobile, muncul pop-up saat diklik) -->
             <div class="spot-transit-compact">
-              <button class="btn btn-transit-compact" onclick="RundownCountdown.openTransitModal('${spot.id}')" title="Buka penjelasan rute angkutan umum">
+              <button type="button" class="btn btn-transit-compact" onclick="RundownCountdown.openTransitModal('${spot.id}')" title="Buka penjelasan rute angkutan umum">
                 <i class="ph ph-bus"></i>
-                <span>Lihat Panduan Rute & Angkutan Umum</span>
-                <i class="ph ph-arrow-right" style="font-size: 0.9rem;"></i>
+                <span>Panduan Rute & Angkutan Umum</span>
+                <i class="ph ph-arrow-right"></i>
               </button>
             </div>
 
