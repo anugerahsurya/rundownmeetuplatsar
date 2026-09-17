@@ -424,20 +424,24 @@ const PhotostripApp = {
     if (!video) return;
 
     try {
+      // Natural unzoomed optical resolution matching camera.js without digital sensor crop
       const constraints = {
-        audio: false,
         video: {
-          facingMode: this.currentFacingMode,
-          aspectRatio: { ideal: 0.75 },
-          width: { ideal: 1280 },
-          height: { ideal: 1706 }
-        }
+          facingMode: { ideal: this.currentFacingMode },
+          width: { ideal: 1920 },
+          height: { ideal: 1440 }
+        },
+        audio: false
       };
 
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = this.stream;
       await video.play();
 
+      const track = this.stream && this.stream.getVideoTracks()[0];
+      const trackSettings = (track && track.getSettings) ? track.getSettings() : {};
+      const isUserFacing = (trackSettings.facingMode === 'user') || (this.currentFacingMode === 'user');
+      this.isMirrored = isUserFacing;
       this.applyMirrorTransform();
     } catch (err) {
       console.warn('Camera stream error:', err);
@@ -478,18 +482,46 @@ const PhotostripApp = {
 
   capturePhoto() {
     const video = document.getElementById('strip-video-feed');
+    const streamContainer = document.getElementById('strip-camera-stream-wrapper') || (video && video.parentElement);
     if (!video || !this.stream) return;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 960;
-    canvas.height = video.videoHeight || 1280;
+    const vw = video.videoWidth || 1440;
+    const vh = video.videoHeight || 1920;
 
+    const boxWidth = streamContainer && streamContainer.clientWidth ? streamContainer.clientWidth : 360;
+    const boxHeight = streamContainer && streamContainer.clientHeight ? streamContainer.clientHeight : 480;
+    const targetAspect = (boxWidth && boxHeight) ? (boxWidth / boxHeight) : (3 / 4);
+
+    const videoAspect = vw / vh;
+
+    let sx = 0;
+    let sy = 0;
+    let sw = vw;
+    let sh = vh;
+
+    // Perform exact WYSIWYG unzoomed crop matching object-fit: cover
+    if (videoAspect > targetAspect) {
+      sw = vh * targetAspect;
+      sh = vh;
+      sx = (vw - sw) / 2;
+      sy = 0;
+    } else {
+      sw = vw;
+      sh = vw / targetAspect;
+      sx = 0;
+      sy = (vh - sh) / 2;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(sw);
+    canvas.height = Math.round(sh);
     const ctx = canvas.getContext('2d');
+
     if (this.isMirrored) {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
     }
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
     // Compress to efficient JPEG dataUrl
     this.capturedBlobUrl = canvas.toDataURL('image/jpeg', 0.88);
