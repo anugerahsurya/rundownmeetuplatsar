@@ -127,7 +127,83 @@ const AppStorage = {
   },
 
   /**
-   * Send photo to Google Apps Script Web App for Google Drive upload
+   * Sync and fetch all photos stored in the "Rundown Meetup" Google Drive folder
+   * Enables multi-device visibility (e.g. photos uploaded from phone appear on laptop/other phones)
+   */
+  async syncFromDrive() {
+    if (!this.db) await this.init();
+    const settings = this.getSettings();
+    if (!settings.scriptUrl || settings.scriptUrl.trim() === '') {
+      return { success: false, updated: false, message: 'URL Google Apps Script belum diatur' };
+    }
+
+    try {
+      const response = await fetch(settings.scriptUrl, {
+        method: 'GET',
+        cache: 'no-store'
+      });
+
+      if (!response.ok) {
+        return { success: false, updated: false, message: 'Gagal menghubungi server Google Drive' };
+      }
+
+      const resJson = await response.json();
+      if (resJson.status !== 'success' || !Array.isArray(resJson.photos)) {
+        return { success: false, updated: false, message: resJson.message || 'Format data Drive tidak sesuai' };
+      }
+
+      const currentLocalPhotos = await this.getAllPhotos();
+      let newCount = 0;
+
+      for (const driveItem of resJson.photos) {
+        // Check if item already exists locally by driveFileId or (spotName + timestamp)
+        const exists = currentLocalPhotos.some(p => 
+          (p.driveFileId && p.driveFileId === driveItem.driveFileId) ||
+          (p.driveFileId && p.driveFileId === driveItem.id) ||
+          (driveItem.timestamp && p.timestamp === driveItem.timestamp && p.userName === driveItem.userName)
+        );
+
+        if (!exists) {
+          // Add newly discovered photo from Drive to local IndexedDB
+          const newRecord = {
+            spotId: driveItem.spotId || 'spot-1',
+            spotName: driveItem.spotName || 'Rundown Spot',
+            userName: driveItem.userName || 'Teman Main',
+            timestamp: driveItem.timestamp || new Date().toISOString(),
+            originalSize: 0,
+            originalFormattedSize: driveItem.originalFormattedSize || 'Cloud',
+            webSize: 0,
+            webFormattedSize: driveItem.webFormattedSize || 'Cloud',
+            savingsPercent: driveItem.savingsPercent || 0,
+            webDataUrl: driveItem.webDataUrl || driveItem.driveUrl,
+            thumbDataUrl: driveItem.thumbDataUrl || driveItem.thumbUrl || driveItem.webDataUrl,
+            syncStatus: 'synced',
+            driveUrl: driveItem.driveUrl,
+            driveFileId: driveItem.driveFileId || driveItem.id,
+            driveError: null
+          };
+
+          await new Promise((resolve, reject) => {
+            const tx = this.db.transaction('photos', 'readwrite');
+            const store = tx.objectStore('photos');
+            const req = store.add(newRecord);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+          });
+
+          newCount++;
+        }
+      }
+
+      return { success: true, updated: newCount > 0, count: newCount };
+    } catch (err) {
+      console.warn('syncFromDrive error:', err);
+      return { success: false, updated: false, error: err.message };
+    }
+  },
+
+  /**
+   * Send photo to Google Apps Script Web App for Google Drive upload into "Rundown Meetup"
    */
   async syncToDrive(photo) {
     const settings = this.getSettings();
@@ -145,15 +221,20 @@ const AppStorage = {
     try {
       const payload = {
         base64Data: photo.webDataUrl,
-        filename: `Rundown_${photo.spotName.replace(/[^a-zA-Z0-9]/g, '_')}_${photo.userName}_${Date.now()}.jpg`,
+        filename: `Rundown_${(photo.spotName || 'spot').replace(/[^a-zA-Z0-9]/g, '_')}_${(photo.userName || 'user').replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.jpg`,
         mimeType: 'image/jpeg',
+        spotId: photo.spotId,
         spotName: photo.spotName,
         userName: photo.userName,
+        timestamp: photo.timestamp,
+        originalFormattedSize: photo.originalFormattedSize,
+        webFormattedSize: photo.webFormattedSize,
+        savingsPercent: photo.savingsPercent,
+        folderName: 'Rundown Meetup',
         folderId: settings.folderId || ''
       };
 
       // Send to Apps Script Web App
-      // Apps Script requires redirect follow or text/plain POST to bypass strict preflight
       const response = await fetch(settings.scriptUrl, {
         method: 'POST',
         headers: {
@@ -172,7 +253,7 @@ const AppStorage = {
 
       if (resJson.status === 'success' || response.ok) {
         photo.syncStatus = 'synced';
-        photo.driveUrl = resJson.fileUrl || null;
+        photo.driveUrl = resJson.driveUrl || resJson.fileUrl || null;
         photo.driveFileId = resJson.fileId || null;
         photo.driveError = null;
       } else {
@@ -181,7 +262,6 @@ const AppStorage = {
       }
     } catch (err) {
       console.warn('Sync to Google Drive failed or CORS restricted:', err);
-      // Even if CORS limits response reading, with no-cors or redirect it can still succeed, but we mark error/local with retry
       photo.syncStatus = 'error';
       photo.driveError = err.message || 'Koneksi ke Drive terputus';
     }
@@ -200,7 +280,7 @@ const AppStorage = {
     return {
       scriptUrl: localStorage.getItem('gdrive_script_url') || '',
       folderId: localStorage.getItem('gdrive_folder_id') || '',
-      folderName: localStorage.getItem('gdrive_folder_name') || 'Dokumentasi Rundown Main',
+      folderName: localStorage.getItem('gdrive_folder_name') || 'Rundown Meetup',
       defaultUserName: localStorage.getItem('rundown_user_name') || '',
       eventDate: localStorage.getItem('rundown_event_date') || '2026-09-27'
     };

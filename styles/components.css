@@ -407,7 +407,7 @@
 
 .timeline-item.is-active .timeline-content-card {
   border: 2px solid var(--accent-amber);
-  background: #FFFDF9;
+  background: #FFFFFF;
   box-shadow: 0 8px 24px rgba(216, 122, 62, 0.15);
 }
 

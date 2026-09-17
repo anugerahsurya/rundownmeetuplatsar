@@ -144,6 +144,10 @@ const App = {
 
         showToast('Pengaturan Google Drive & Tanggal Berhasil Disimpan! ✅', 'success');
         closeModal();
+
+        if (scriptInput && scriptInput.value.trim() !== '') {
+          PhotoGallery.syncFromDriveBackground();
+        }
       });
     }
   },

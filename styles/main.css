@@ -26,12 +26,12 @@
   --brown-200: #DFC1B6;
   --brown-100: #F3EAE5;
 
-  /* Cream & Neutral Palette */
-  --cream-50: #FCFAF6;
-  --cream-100: #F7F3EB;
-  --cream-200: #EFE8DA;
-  --cream-300: #E0D5C1;
-  --cream-400: #CFC0A7;
+  /* Clean White & Crisp Neutral Palette */
+  --cream-50: #FFFFFF;
+  --cream-100: #F8FAFC;
+  --cream-200: #F1F5F9;
+  --cream-300: #E2E8F0;
+  --cream-400: #CBD5E1;
 
   /* Accent & Status */
   --accent-gold: #C5984A;
@@ -40,19 +40,19 @@
   --accent-sky: #0277BD;
 
   /* Text colors */
-  --text-primary: #261710;
-  --text-secondary: #5C4F47;
-  --text-muted: #8C7B70;
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
   --text-light: #FFFFFF;
 
   /* Borders & Shadows */
-  --border-subtle: rgba(62, 39, 29, 0.12);
-  --border-medium: rgba(62, 39, 29, 0.22);
-  --border-glass: rgba(255, 255, 255, 0.9);
-  --shadow-sm: 0 2px 8px rgba(38, 23, 16, 0.04);
-  --shadow-md: 0 8px 24px rgba(38, 23, 16, 0.08);
-  --shadow-lg: 0 16px 40px rgba(38, 23, 16, 0.12);
-  --shadow-floating: 0 20px 48px rgba(38, 23, 16, 0.18);
+  --border-subtle: #E2E8F0;
+  --border-medium: #CBD5E1;
+  --border-glass: rgba(255, 255, 255, 0.95);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 25px rgba(15, 23, 42, 0.08);
+  --shadow-floating: 0 16px 36px rgba(15, 23, 42, 0.12);
 
   /* Radius */
   --radius-sm: 10px;
@@ -98,14 +98,9 @@ main {
   width: 100%;
 }
 
-/* Subtle organic alive background animation - pure white base with gentle drifting warm orbs */
+/* Clean white background - disable warm ambient orbs */
 .bg-ambient-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-  opacity: 0.65;
+  display: none;
 }
 
 .ambient-orb {

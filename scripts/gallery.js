@@ -80,6 +80,25 @@ const PhotoGallery = {
     this.photos = await AppStorage.getAllPhotos();
     this.populateUserFilterOptions();
     this.render();
+
+    // Asynchronously fetch photos from "Rundown Meetup" Google Drive so photos uploaded from other devices appear
+    this.syncFromDriveBackground();
+  },
+
+  async syncFromDriveBackground() {
+    try {
+      const res = await AppStorage.syncFromDrive();
+      if (res && res.updated) {
+        this.photos = await AppStorage.getAllPhotos();
+        this.populateUserFilterOptions();
+        this.render();
+        if (window.SphereGallery && typeof window.SphereGallery.renderSphere === 'function') {
+          window.SphereGallery.renderSphere();
+        }
+      }
+    } catch (e) {
+      console.warn('Sync from drive notice:', e);
+    }
   },
 
   populateUserFilterOptions() {

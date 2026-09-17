@@ -331,6 +331,11 @@
       <p class="footer-credits">
         Dibuat khusus untuk momen kebersamaan yang hangat • Dilengkapi kompresi gambar hemat kuota & integrasi Google Drive.
       </p>
+      <div style="margin-top: 14px;">
+        <button id="btn-footer-settings" class="btn btn-sm btn-outline" onclick="document.getElementById('settings-modal').classList.add('is-open')" style="font-size: 0.8rem; padding: 6px 16px; border-radius: var(--radius-full);">
+          <i class="ph ph-google-drive-logo" style="color: #2E7D32;"></i> Pengaturan Google Drive (Folder: Rundown Meetup)
+        </button>
+      </div>
     </div>
   </footer>
 
@@ -534,7 +539,7 @@
 
           <div class="form-group" style="margin-bottom: 18px;">
             <label class="form-label" for="setting-folder-id">ID Folder Google Drive (Opsional)</label>
-            <input type="text" id="setting-folder-id" class="form-control" placeholder="Biarkan kosong untuk menggunakan folder default 'Dokumentasi Rundown Main'">
+            <input type="text" id="setting-folder-id" class="form-control" placeholder="Biarkan kosong untuk otomatis menggunakan/membuat folder 'Rundown Meetup'">
           </div>
 
           <!-- Quick 1-minute setup tutorial -->
