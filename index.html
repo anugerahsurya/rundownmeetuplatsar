@@ -289,11 +289,38 @@
     </section>
   </main>
 
-  <!-- Floating Camera Button for mobile -->
+  <!-- Floating Camera Button for desktop -->
   <button class="fab-camera" onclick="CameraApp.open()">
     <i class="ph ph-camera" style="font-size: 1.25rem;"></i>
     <span>Foto Sekarang</span>
   </button>
+
+  <!-- Mobile Bottom Navigation Bar with Prominent 'Foto Sekarang' and Toast Integration -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Navigasi Bawah Ponsel">
+    <a href="#countdown-section" class="bottom-nav-item">
+      <i class="ph ph-hourglass"></i>
+      <span>Jadwal</span>
+    </a>
+    <a href="#dresscode-section" class="bottom-nav-item">
+      <i class="ph ph-t-shirt"></i>
+      <span>Outfit</span>
+    </a>
+
+    <!-- Center Action Button: Foto Sekarang -->
+    <button class="bottom-nav-action-btn" onclick="showToast('Membuka kamera foto... 📸', 'info'); CameraApp.open();" title="Ambil Foto Sekarang">
+      <i class="ph ph-camera"></i>
+      <span>Foto</span>
+    </button>
+
+    <a href="#rundown-section" class="bottom-nav-item">
+      <i class="ph ph-map-pin"></i>
+      <span>Rute</span>
+    </a>
+    <a href="#gallery-section" class="bottom-nav-item">
+      <i class="ph ph-images"></i>
+      <span>Galeri</span>
+    </a>
+  </nav>
 
   <!-- Footer -->
   <footer class="site-footer">

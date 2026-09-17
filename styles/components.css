@@ -1578,3 +1578,128 @@
   to { transform: scale(1); opacity: 1; }
 }
 
+/* =========================================================
+   MOBILE BOTTOM NAVIGATION BAR WITH PHOTO BUTTON
+   ========================================================= */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 28px);
+  max-width: 440px;
+  height: 68px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(62, 39, 29, 0.16);
+  border-radius: var(--radius-full);
+  box-shadow: 0 16px 40px rgba(38, 23, 16, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 12px;
+  z-index: 990;
+  transition: var(--transition-smooth);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--brown-600);
+  text-decoration: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-smooth);
+  min-width: 52px;
+}
+
+.bottom-nav-item i {
+  font-size: 1.25rem;
+  color: var(--brown-700);
+  transition: var(--transition-smooth);
+}
+
+.bottom-nav-item:hover,
+.bottom-nav-item:active {
+  color: var(--brown-900);
+  transform: translateY(-2px);
+}
+
+.bottom-nav-item:hover i {
+  color: var(--brown-900);
+}
+
+/* Center Prominent Foto Sekarang Button */
+.bottom-nav-action-btn {
+  position: relative;
+  top: -14px;
+  background: linear-gradient(135deg, var(--brown-800), var(--brown-950));
+  color: #FFFFFF;
+  border: 3px solid #FFFFFF;
+  border-radius: var(--radius-full);
+  width: 62px;
+  height: 62px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 10px 24px rgba(38, 23, 16, 0.35);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  font-family: inherit;
+}
+
+.bottom-nav-action-btn i {
+  font-size: 1.45rem;
+  color: #F7F3EB;
+}
+
+.bottom-nav-action-btn span {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #F7F3EB;
+}
+
+.bottom-nav-action-btn:hover,
+.bottom-nav-action-btn:active {
+  transform: scale(1.06);
+  box-shadow: 0 14px 30px rgba(38, 23, 16, 0.45);
+}
+
+/* Toast Container positioning above bottom nav on mobile */
+@media (max-width: 768px) {
+  .fab-camera {
+    display: none !important;
+  }
+
+  .toast-container {
+    bottom: 94px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 380px !important;
+    align-items: center !important;
+  }
+
+  .toast-message {
+    width: 100% !important;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+}
+
+
