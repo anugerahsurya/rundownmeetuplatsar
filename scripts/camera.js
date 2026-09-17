@@ -10,6 +10,8 @@ const CameraApp = {
   currentSpotId: 'spot-1',
   currentSpotName: 'Fotohokkie - Blok M',
 
+  isMirrored: false,
+
   init() {
     this.bindEvents();
   },
@@ -37,6 +39,12 @@ const CameraApp = {
     const switchBtn = document.getElementById('camera-switch-btn');
     if (switchBtn) {
       switchBtn.addEventListener('click', () => this.toggleFacingMode());
+    }
+
+    // Mirror toggle button
+    const mirrorBtn = document.getElementById('camera-mirror-btn');
+    if (mirrorBtn) {
+      mirrorBtn.addEventListener('click', () => this.toggleMirror());
     }
 
     // File input fallback (pick from gallery/native camera)
@@ -125,6 +133,14 @@ const CameraApp = {
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       video.srcObject = this.stream;
       await video.play();
+
+      // Automatically mirror if using front/selfie camera or webcam
+      const track = this.stream && this.stream.getVideoTracks()[0];
+      const trackSettings = (track && track.getSettings) ? track.getSettings() : {};
+      const isUserFacing = (trackSettings.facingMode === 'user') || (this.facingMode === 'user');
+      this.isMirrored = isUserFacing;
+      this.updateMirrorUI();
+
       document.getElementById('camera-stream-wrapper').classList.remove('camera-error');
     } catch (err) {
       console.warn('Cannot access live webcam stream:', err);
@@ -148,7 +164,35 @@ const CameraApp = {
 
   toggleFacingMode() {
     this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
+    this.isMirrored = (this.facingMode === 'user');
     this.startStream();
+  },
+
+  toggleMirror() {
+    this.isMirrored = !this.isMirrored;
+    this.updateMirrorUI();
+    if (typeof showToast === 'function') {
+      showToast(this.isMirrored ? 'Mode cermin aktif (Mirror ON) 🪞' : 'Mode cermin nonaktif (Mirror OFF)', 'info');
+    }
+  },
+
+  updateMirrorUI() {
+    const video = document.getElementById('camera-video-feed');
+    const mirrorBtn = document.getElementById('camera-mirror-btn');
+    if (video) {
+      video.style.transform = this.isMirrored ? 'scaleX(-1)' : 'none';
+    }
+    if (mirrorBtn) {
+      if (this.isMirrored) {
+        mirrorBtn.style.background = 'var(--brown-800)';
+        mirrorBtn.style.color = '#FFF';
+        mirrorBtn.style.borderColor = 'var(--brown-900)';
+      } else {
+        mirrorBtn.style.background = '';
+        mirrorBtn.style.color = '';
+        mirrorBtn.style.borderColor = '';
+      }
+    }
   },
 
   async capture() {
@@ -191,7 +235,11 @@ const CameraApp = {
     canvas.height = Math.round(sh);
     const ctx = canvas.getContext('2d');
 
-    // NO MIRRORING: Captured exactly as seen (true orientation as requested)
+    // MIRROR EFFECT: If mirror mode is active, horizontally flip to match live reflection
+    if (this.isMirrored) {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
     const rawDataUrl = canvas.toDataURL('image/jpeg', 0.95);

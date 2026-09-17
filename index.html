@@ -366,12 +366,17 @@
             <input type="file" id="camera-file-input" accept="image/*" style="display: none;">
 
             <!-- Shutter button -->
-            <button class="shutter-btn" id="camera-shutter-btn" title="Jepret Foto">
+            <button type="button" class="shutter-btn" id="camera-shutter-btn" title="Jepret Foto">
               <div class="shutter-inner"></div>
             </button>
 
+            <!-- Toggle Mirror button -->
+            <button type="button" class="camera-action-btn" id="camera-mirror-btn" title="Aktif/Nonaktifkan Cermin (Mirror)" onclick="CameraApp.toggleMirror()">
+              <i class="ph ph-flip-horizontal"></i>
+            </button>
+
             <!-- Switch camera -->
-            <button class="camera-action-btn" id="camera-switch-btn" title="Ganti Kamera Depan/Belakang">
+            <button type="button" class="camera-action-btn" id="camera-switch-btn" title="Ganti Kamera Depan/Belakang">
               <i class="ph ph-camera-rotate"></i>
             </button>
           </div>
