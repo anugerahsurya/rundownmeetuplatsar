@@ -273,12 +273,14 @@ const AppStorage = {
     return photo;
   },
 
+  DEFAULT_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwJH59GfDV4w7JqvR1I3DpXizDAWgNzF9VK2p97o4ltHKVJn1dsWAxot4T2nZTX5CT7Mg/exec',
+
   /**
-   * Settings management (localStorage)
+   * Settings management (localStorage with hardcoded default for cross-device sync)
    */
   getSettings() {
     return {
-      scriptUrl: localStorage.getItem('gdrive_script_url') || '',
+      scriptUrl: localStorage.getItem('gdrive_script_url') || this.DEFAULT_SCRIPT_URL,
       folderId: localStorage.getItem('gdrive_folder_id') || '',
       folderName: localStorage.getItem('gdrive_folder_name') || 'Rundown Meetup',
       defaultUserName: localStorage.getItem('rundown_user_name') || '',
