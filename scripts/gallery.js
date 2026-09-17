@@ -87,7 +87,9 @@ const PhotoGallery = {
     if (!userSelect) return;
 
     const currentVal = userSelect.value;
-    const users = Array.from(new Set(this.photos.map(p => p.userName))).filter(Boolean);
+    const defaultFriends = ['Surya', 'Zakki', 'Lia', 'Sofi'];
+    const uploadedUsers = this.photos.map(p => p.userName).filter(Boolean);
+    const users = Array.from(new Set([...defaultFriends, ...uploadedUsers]));
 
     userSelect.innerHTML = '<option value="all">Semua Teman (Semua Pengunggah)</option>' +
       users.map(u => `<option value="${this.escapeHtml(u)}">${this.escapeHtml(u)}</option>`).join('');

@@ -87,8 +87,8 @@ const CameraApp = {
     // Prefill user name from storage
     const settings = AppStorage.getSettings();
     const nameInput = document.getElementById('camera-user-name');
-    if (nameInput && !nameInput.value) {
-      nameInput.value = settings.defaultUserName || '';
+    if (nameInput && settings.defaultUserName) {
+      nameInput.value = settings.defaultUserName;
     }
 
     modal.classList.add('is-open');
